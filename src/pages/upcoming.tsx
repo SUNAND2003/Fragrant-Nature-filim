@@ -1,0 +1,60 @@
+import { Link } from "react-router";
+import { useState } from "react";
+
+import { films, type Film } from "@/lib/films";
+import { usePageMeta } from "@/lib/use-page-meta";
+import { PageTitle, PlayButton, Reveal, TrailerModal } from "@/components/site";
+
+export function UpcomingPage() {
+  usePageMeta({
+    title: "Upcoming Releases — Lumen Pictures",
+    description: "The Lumen Pictures release slate: upcoming films and trailers.",
+  });
+
+  const [film, setFilm] = useState<Film | null>(null);
+  const list = films.filter((f) => f.status === "upcoming");
+  return (
+    <>
+      <PageTitle eyebrow="2027 slate" title="Coming" outline="Soon" />
+      <div className="mx-auto max-w-[1600px] space-y-32 px-5 pb-24 md:px-10">
+        {list.map((f, i) => (
+          <div
+            key={f.slug}
+            className={`grid items-center gap-10 md:grid-cols-2 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}
+          >
+            <Reveal>
+              <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl">
+                <img
+                  src={f.poster}
+                  alt={f.title}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
+                />
+                <div className="absolute left-4 top-4 bg-neon px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-primary-foreground">
+                  {f.release}
+                </div>
+              </div>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+                {f.genre} — Dir. {f.director}
+              </p>
+              <h2 className="mt-4 font-display text-5xl md:text-7xl">{f.title}</h2>
+              <p className="mt-6 max-w-lg text-lg text-muted-foreground">{f.synopsis}</p>
+              <div className="mt-10 flex flex-wrap items-center gap-8">
+                <PlayButton onClick={() => setFilm(f)} label="Teaser" />
+                <Link
+                  to={`/films/${f.slug}`}
+                  className="font-mono text-xs uppercase tracking-[0.25em] underline-offset-8 hover:text-neon-ink hover:underline"
+                >
+                  Details →
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+        ))}
+      </div>
+      {film && <TrailerModal film={film} open={!!film} onClose={() => setFilm(null)} />}
+    </>
+  );
+}

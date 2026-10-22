@@ -1,0 +1,216 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Anton", "Impact", sans-serif;
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-neon: var(--neon);
+  --color-neon-ink: var(--neon-ink);
+  --color-neon-pink: var(--neon-pink);
+  --color-scrim: var(--scrim);
+}
+
+:root {
+  --radius: 0rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(0.96 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.93 0.22 125);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.94 0 0);
+  --secondary-foreground: oklch(0.18 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.45 0.01 100);
+  --accent: oklch(0.55 0.24 350);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0 0 0 / 12%);
+  --input: oklch(0 0 0 / 15%);
+  --ring: oklch(0.55 0.19 140);
+  /* Bright neon — fills, hovers, and text over dark imagery. */
+  --neon: oklch(0.93 0.22 125);
+  /* Deepened neon — accent text on the white page (AA-legible). */
+  --neon-ink: oklch(0.55 0.19 140);
+  --neon-pink: oklch(0.55 0.24 350);
+  /* Stays dark: gradient scrims over photos and the trailer lightbox. */
+  --scrim: oklch(0.08 0 0);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--neon);
+    color: var(--primary-foreground);
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.88;
+}
+
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--foreground);
+}
+
+/* Restores the original dark palette (light text/borders, bright neon) on the
+   white theme for dark stages: hero, filmstrip band, header. Vars only — pair
+   with bg-background/text-foreground where a dark panel background is wanted. */
+@utility theme-dark {
+  --background: oklch(0.11 0 0);
+  --foreground: oklch(0.97 0.01 100);
+  --card: oklch(0.15 0 0);
+  --card-foreground: oklch(0.97 0.01 100);
+  --popover: oklch(0.15 0 0);
+  --popover-foreground: oklch(0.97 0.01 100);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.97 0.01 100);
+  --muted: oklch(0.19 0 0);
+  --muted-foreground: oklch(0.65 0.01 100);
+  --accent: oklch(0.65 0.27 350);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.93 0.22 125);
+  --neon: oklch(0.93 0.22 125);
+  --neon-ink: oklch(0.93 0.22 125);
+  --neon-pink: oklch(0.65 0.27 350);
+}
+
+@utility grain {
+  &::after {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain 0.8s steps(4) infinite;
+  }
+}
+
+@utility scrim-b {
+  background: linear-gradient(
+    to top,
+    var(--scrim) 0%,
+    color-mix(in oklab, var(--scrim) 60%, transparent) 40%,
+    transparent 100%
+  );
+}
+
+@utility marquee {
+  animation: marquee 28s linear infinite;
+}
+
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-5%, 3%);
+  }
+  50% {
+    transform: translate(4%, -6%);
+  }
+  75% {
+    transform: translate(-3%, 5%);
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1.05) translate(0, 0);
+  }
+  to {
+    transform: scale(1.25) translate(-3%, -2%);
+  }
+}
+@utility kenburns {
+  animation: kenburns 9s ease-in-out infinite alternate;
+}
+
+/* Hero-only drift: a slower, gentler continuous move so the frame keeps
+   breathing for the whole time the slide is on screen (NEON-style).
+   Two directions, alternate per slide so no two look the same. */
+@keyframes drift {
+  from {
+    transform: scale(1.06) translate(0, 0);
+  }
+  to {
+    transform: scale(1.2) translate(-3.5%, -2.5%);
+  }
+}
+@keyframes drift-alt {
+  from {
+    transform: scale(1.2) translate(3.5%, -1.5%);
+  }
+  to {
+    transform: scale(1.06) translate(0.5%, 2.5%);
+  }
+}
+@utility hero-drift {
+  animation: drift 22s ease-in-out infinite alternate;
+}
+@utility hero-drift-alt {
+  animation: drift-alt 22s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns,
+  .hero-drift,
+  .hero-drift-alt {
+    animation: none;
+  }
+}

@@ -15,15 +15,15 @@ export function UpcomingPage() {
   const list = films.filter((f) => f.status === "upcoming");
   return (
     <>
-      <PageTitle eyebrow="2027 slate" title="Coming" outline="Soon" />
+      <PageTitle eyebrow="2027 slate" title="Coming" outline="Soon" small />
       <div className="mx-auto max-w-[1600px] space-y-32 px-5 pb-24 md:px-10">
         {list.map((f, i) => (
           <div
             key={f.slug}
-            className={`grid items-center gap-10 md:grid-cols-2 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}
+            className={`grid items-center justify-items-center gap-10 md:grid-cols-2 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}
           >
             <Reveal>
-              <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl">
+              <div className="group relative aspect-[4/5] max-w-[480px] overflow-hidden rounded-2xl">
                 <img
                   src={f.poster}
                   alt={f.title}
@@ -39,7 +39,7 @@ export function UpcomingPage() {
               <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
                 {f.genre} — Dir. {f.director}
               </p>
-              <h2 className="mt-4 font-display text-5xl md:text-7xl">{f.title}</h2>
+              <h2 className="mt-4 font-display text-4xl md:text-5xl">{f.title}</h2>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">{f.synopsis}</p>
               <div className="mt-10 flex flex-wrap items-center gap-8">
                 <PlayButton onClick={() => setFilm(f)} label="Teaser" />

@@ -32,7 +32,7 @@ export function SiteHeader() {
     <header
       className={`theme-dark fixed inset-x-0 top-0 z-50 text-foreground transition-colors duration-500 ${overHero ? "bg-transparent" : "bg-black"}`}
     >
-      <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center px-5 py-4 md:px-10">
+      <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center px-5 py-1.5 md:px-10 md:py-2">
         <div className="col-start-1" aria-hidden />
         <Link
           to="/"
@@ -43,7 +43,7 @@ export function SiteHeader() {
         </Link>
         <button
           onClick={() => setOpen(!open)}
-          className="col-start-3 justify-self-end p-2"
+          className="col-start-3 justify-self-end p-2.5"
           aria-label="Menu"
           aria-expanded={open}
         >
@@ -202,11 +202,15 @@ export function PageTitle({
   eyebrow,
   title,
   outline,
+  small = false,
 }: {
   eyebrow: string;
   title: string;
   outline?: string;
+  small?: boolean;
 }) {
+  // `small` tightens the display type for pages that want a lighter hero.
+  const size = small ? "text-[9vw] md:text-[6vw]" : "text-[14vw] md:text-[9vw]";
   return (
     <section className="mx-auto max-w-[1600px] px-5 pb-12 pt-36 md:px-10 md:pt-44">
       <motion.p
@@ -216,7 +220,7 @@ export function PageTitle({
       >
         {eyebrow}
       </motion.p>
-      <h1 className="mt-4 overflow-hidden font-display text-[14vw] md:text-[9vw]">
+      <h1 className={`mt-4 overflow-hidden font-display ${size}`}>
         <motion.span
           className="block"
           initial={{ y: "100%" }}
@@ -227,7 +231,7 @@ export function PageTitle({
         </motion.span>
       </h1>
       {outline && (
-        <h2 className="overflow-hidden font-display text-[14vw] text-outline md:text-[9vw]">
+        <h2 className={`overflow-hidden font-display ${size} text-outline`}>
           <motion.span
             className="block"
             initial={{ y: "100%" }}
@@ -374,13 +378,13 @@ export function PlayButton({
     <button
       onClick={onClick}
       style={color ? ({ "--play-accent": color } as CSSProperties) : undefined}
-      className="group inline-flex items-center gap-4 font-mono text-xs uppercase tracking-[0.25em] text-white"
+      className="group inline-flex items-center gap-4 font-mono text-xs uppercase tracking-[0.25em] text-foreground"
     >
-      <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/70 transition-all duration-500 group-hover:scale-110 group-hover:border-[var(--play-accent,var(--neon))] group-hover:bg-[var(--play-accent,var(--neon))] group-hover:text-primary-foreground">
-        <span className="absolute inset-0 animate-ping rounded-full border border-[var(--play-accent,var(--neon))] opacity-40" />
+      <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-foreground/70 transition-all duration-500 group-hover:scale-110 group-hover:border-[var(--play-accent,var(--neon))] group-hover:bg-[var(--play-accent,var(--neon))] group-hover:text-primary-foreground">
+        <span className="absolute inset-0 animate-ping rounded-full border border-[var(--play-accent,var(--neon-ink))] opacity-40" />
         ▶
       </span>
-      <span className="transition-colors group-hover:text-[color:var(--play-accent,var(--neon))]">
+      <span className="transition-colors group-hover:text-[color:var(--play-accent,var(--neon-ink))]">
         {label}
       </span>
     </button>

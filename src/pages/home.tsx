@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { films, news, type Film } from "@/lib/films";
 import { useLikes } from "@/lib/likes";
@@ -215,6 +215,169 @@ function HeroCarousel() {
   );
 }
 
+/** NEON-style "Watch Now" strip — horizontally scrolling 16:9 stills with
+ *  hover actions (like + trailer) and prev/next controls in the heading. */
+function WatchNow() {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const { likes, toggle } = useLikes();
+  const [trailerFilm, setTrailerFilm] = useState<Film>(films[0] as Film);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+
+  const nudge = (dir: 1 | -1) => {
+    const row = rowRef.current;
+    if (!row) return;
+    row.scrollBy({
+      left: dir * Math.max(260, Math.round(row.clientWidth * 0.7)),
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <section className="border-b border-border">
+      <div className="mx-auto mb-8 flex max-w-[1600px] flex-wrap items-end justify-between gap-4 px-5 pt-24 md:px-10">
+        <Reveal className="flex items-end gap-4 md:gap-6">
+          <h2 className="font-display text-4xl leading-none md:text-5xl">
+            Watch
+            <br />
+            <span className="text-neon-ink">Now</span>
+          </h2>
+          <div className="flex gap-2 pb-1">
+            <button
+              type="button"
+              onClick={() => nudge(-1)}
+              aria-label="Scroll to previous titles"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-colors hover:border-foreground"
+            >
+              <svg viewBox="0 0 9 8" fill="currentColor" className="h-2.5 w-3" aria-hidden>
+                <path d="M8.71385 4.30769L1.17538 4.30769L4.40615 7.53846L4 8L0 4L4 0L4.40615 0.461538L1.17538 3.69231L8.71385 3.69231L8.71385 4.30769Z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => nudge(1)}
+              aria-label="Scroll to next titles"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-border transition-colors hover:border-foreground"
+            >
+              <svg viewBox="0 0 10 8" fill="currentColor" className="h-2.5 w-3" aria-hidden>
+                <path d="M0.713888 3.69231L8.25235 3.69231L5.02158 0.461538L5.42773 0L9.42773 4L5.42773 8L5.02158 7.53846L8.25235 4.30769L0.713888 4.30769L0.713888 3.69231Z" />
+              </svg>
+            </button>
+          </div>
+        </Reveal>
+        <Link
+          to="/films"
+          className="font-mono text-xs uppercase tracking-[0.25em] hover:text-neon-ink"
+        >
+          All movies →
+        </Link>
+      </div>
+
+      <div
+        ref={rowRef}
+        className="no-scrollbar flex snap-x gap-4 overflow-x-auto scroll-pl-5 px-5 pb-24 md:scroll-pl-10 md:px-10"
+      >
+        {films.map((f, i) => {
+          const liked = likes.includes(f.slug);
+          return (
+            <div
+              key={f.slug}
+              className="group w-[264px] shrink-0 snap-start sm:w-[300px] md:w-[340px]"
+            >
+              <div className="relative aspect-video overflow-hidden rounded-2xl bg-card">
+                <img
+                  src={f.poster}
+                  alt={`${f.title} still`}
+                  loading={i < 4 ? "eager" : "lazy"}
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1.2s] ease-out group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-0 scrim-b opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
+                {f.status === "upcoming" && (
+                  <span className="absolute left-3 top-3 rounded-full border border-white/50 bg-black/45 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
+                    Coming soon
+                  </span>
+                )}
+                <Link
+                  to={`/films/${f.slug}`}
+                  aria-label={`View ${f.title}`}
+                  className="absolute inset-0 rounded-2xl"
+                />
+                <div className="pointer-events-none absolute bottom-3 left-3 flex gap-2 text-white opacity-0 transition-opacity duration-300 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => toggle(f.slug)}
+                    aria-pressed={liked}
+                    aria-label={liked ? `Unlike ${f.title}` : `Like ${f.title}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-black/50 backdrop-blur transition-colors hover:text-neon ${liked ? "text-neon" : ""}`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill={liked ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth={1.6}
+                      className="h-5 w-5"
+                      aria-hidden
+                    >
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTrailerFilm(f);
+                      setTrailerOpen(true);
+                    }}
+                    aria-label={`Play ${f.title} trailer`}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 backdrop-blur transition-colors hover:text-neon"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.6}
+                      strokeLinejoin="round"
+                      className="h-5 w-5"
+                      aria-hidden
+                    >
+                      <path d="M7 4.5l12 7.5-12 7.5z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center gap-3">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                  aria-hidden
+                >
+                  <path d="M5.3522 5H19M19 5V18.6478M19 5L5 19" />
+                </svg>
+                <Link
+                  to={`/films/${f.slug}`}
+                  className="font-mono text-[11px] uppercase tracking-[0.25em] transition-transform duration-300 group-hover:translate-x-1"
+                >
+                  {f.title}
+                </Link>
+                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {f.year}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <TrailerModal film={trailerFilm} open={trailerOpen} onClose={() => setTrailerOpen(false)} />
+    </section>
+  );
+}
+
 export function HomePage() {
   usePageMeta({
     title: "Fragrant Nature — Independent Cinema, Loud",
@@ -304,6 +467,8 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      <WatchNow />
 
       <section>
         <div className="mx-auto max-w-[1600px] px-5 py-24 md:px-10">

@@ -154,6 +154,13 @@
   );
 }
 
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility marquee {
   animation: marquee 28s linear infinite;
 }

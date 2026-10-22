@@ -59,7 +59,8 @@ export function App() {
           </ErrorBoundary>
         </motion.main>
       </AnimatePresence>
-      <SiteFooter />
+      {/* The login page is a full-screen split layout — no site footer below it. */}
+      {location.pathname !== "/login" && <SiteFooter />}
     </>
   );
 }

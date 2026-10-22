@@ -44,7 +44,7 @@ export function FilmsPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
               >
-                <FilmCard film={f} index={i} aspect="aspect-square" />
+                <FilmCard film={f} index={i} aspect="aspect-[4/5]" />
               </motion.div>
             ))}
           </AnimatePresence>

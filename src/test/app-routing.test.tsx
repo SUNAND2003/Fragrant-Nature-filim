@@ -47,7 +47,9 @@ describe("App routing", () => {
     );
 
     expect(screen.getByRole("heading", { name: /gallery/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /open red highway/i })).toBeInTheDocument();
+    // Each film gets its own heading plus an 8-photo set (two rows of four).
+    expect(screen.getByRole("heading", { name: /^red highway$/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /open red highway/i })).toHaveLength(8);
   });
 
   it("renders the login page with only email and password fields", () => {

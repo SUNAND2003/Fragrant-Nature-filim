@@ -7,8 +7,8 @@ import { FilmCard, PageTitle } from "@/components/site";
 
 export function FilmsPage() {
   usePageMeta({
-    title: "Films — Lumen Pictures",
-    description: "Browse the full Lumen Pictures catalog of independent films.",
+    title: "Movies — Fragrant Nature",
+    description: "Browse the full Fragrant Nature catalog of independent movies.",
   });
 
   const genres = ["All", ...Array.from(new Set(films.map((f) => f.genre)))];
@@ -22,14 +22,19 @@ export function FilmsPage() {
           {genres.map((x) => (
             <button
               key={x}
+              type="button"
               onClick={() => setG(x)}
+              aria-pressed={g === x}
               className={`border px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${g === x ? "border-neon bg-neon text-primary-foreground" : "border-border hover:border-foreground"}`}
             >
               {x}
             </button>
           ))}
         </div>
-        <motion.div layout className="grid gap-5 pb-24 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          layout
+          className="grid gap-5 pb-24 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        >
           <AnimatePresence mode="popLayout">
             {list.map((f, i) => (
               <motion.div
@@ -38,9 +43,8 @@ export function FilmsPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className={i % 5 === 0 ? "lg:row-span-2" : ""}
               >
-                <FilmCard film={f} index={i} tall />
+                <FilmCard film={f} index={i} aspect="aspect-square" />
               </motion.div>
             ))}
           </AnimatePresence>

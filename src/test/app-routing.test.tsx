@@ -35,7 +35,19 @@ describe("App routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("404")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /lost frame/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /back to the studio/i })).toBeInTheDocument();
+  });
+
+  it("renders the gallery page for /gallery", () => {
+    render(
+      <MemoryRouter initialEntries={["/gallery"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: /gallery/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open red highway/i })).toBeInTheDocument();
   });
 
   it("renders the login page with only email and password fields", () => {

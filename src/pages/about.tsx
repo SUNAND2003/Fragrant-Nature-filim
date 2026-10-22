@@ -4,8 +4,8 @@ import { PageTitle, Reveal } from "@/components/site";
 
 export function AboutPage() {
   usePageMeta({
-    title: "About — Lumen Pictures",
-    description: "Lumen Pictures is an independent studio championing fearless filmmakers.",
+    title: "About — Fragrant Nature",
+    description: "Fragrant Nature is an independent studio championing fearless filmmakers.",
   });
 
   return (
@@ -22,8 +22,8 @@ export function AboutPage() {
         </Reveal>
         <Reveal delay={0.1} className="space-y-6 text-lg text-muted-foreground">
           <p>
-            Lumen Pictures finds, finances and releases films by filmmakers with something urgent to
-            say. We back debuts as hard as we back legends.
+            Fragrant Nature finds, finances and releases movies by filmmakers with something urgent
+            to say. We back debuts as hard as we back legends.
           </p>
           <p>
             From midnight horror to festival-crowned drama, every release is built like an event —

@@ -7,8 +7,8 @@ import { PageTitle, PlayButton, Reveal, TrailerModal } from "@/components/site";
 
 export function UpcomingPage() {
   usePageMeta({
-    title: "Upcoming Releases — Lumen Pictures",
-    description: "The Lumen Pictures release slate: upcoming films and trailers.",
+    title: "Upcoming Releases — Fragrant Nature",
+    description: "The Fragrant Nature release slate: upcoming movies and trailers.",
   });
 
   const [film, setFilm] = useState<Film | null>(null);

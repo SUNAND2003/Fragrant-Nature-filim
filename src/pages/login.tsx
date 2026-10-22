@@ -16,8 +16,8 @@ type FormValues = z.infer<typeof schema>;
 
 export function LoginPage() {
   usePageMeta({
-    title: "Login — Lumen Pictures",
-    description: "Sign in to your Lumen Pictures account.",
+    title: "Login — Fragrant Nature",
+    description: "Sign in to your Fragrant Nature account.",
   });
 
   const session = useSession();

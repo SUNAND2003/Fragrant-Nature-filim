@@ -11,7 +11,7 @@ function FilmNotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-6">
       <p className="font-display text-6xl">Cut!</p>
       <Link to="/films" className="font-mono text-xs uppercase tracking-widest text-neon-ink">
-        Back to films
+        Back to movies
       </Link>
     </div>
   );
@@ -24,8 +24,8 @@ export function FilmPage() {
 
   usePageMeta(
     film
-      ? { title: `${film.title} — Lumen Pictures`, description: film.synopsis }
-      : { title: "Film not found — Lumen Pictures" },
+      ? { title: `${film.title} — Fragrant Nature`, description: film.synopsis }
+      : { title: "Movie not found — Fragrant Nature" },
   );
 
   if (!film) return <FilmNotFound />;
@@ -38,6 +38,8 @@ export function FilmPage() {
           key={film.slug}
           src={film.poster}
           alt={film.title}
+          fetchPriority="high"
+          decoding="async"
           initial={{ scale: 1.3, filter: "blur(20px)" }}
           animate={{ scale: 1.05, filter: "blur(0px)" }}
           transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}

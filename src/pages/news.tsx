@@ -4,8 +4,8 @@ import { PageTitle, Reveal } from "@/components/site";
 
 export function NewsPage() {
   usePageMeta({
-    title: "News — Lumen Pictures",
-    description: "Awards, trailers, interviews and studio news from Lumen Pictures.",
+    title: "News — Fragrant Nature",
+    description: "Awards, trailers, interviews and studio news from Fragrant Nature.",
   });
 
   const lead = news[0]!;
@@ -15,11 +15,13 @@ export function NewsPage() {
       <PageTitle eyebrow="Dispatch" title="News" />
       <div className="mx-auto max-w-[1600px] px-5 pb-24 md:px-10">
         <Reveal>
-          <article className="group grid cursor-pointer gap-8 border-y border-border py-10 md:grid-cols-2">
+          <article className="group grid gap-8 border-y border-border py-10 md:grid-cols-2">
             <div className="aspect-video overflow-hidden rounded-2xl">
               <img
                 src={lead.image}
-                alt=""
+                alt={lead.title}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             </div>
@@ -34,7 +36,7 @@ export function NewsPage() {
         </Reveal>
         {rest.map((n, i) => (
           <Reveal key={n.id} delay={i * 0.05}>
-            <article className="group relative grid cursor-pointer items-center gap-6 overflow-hidden border-b border-border py-8 md:grid-cols-12">
+            <article className="group relative grid items-center gap-6 overflow-hidden border-b border-border py-8 md:grid-cols-12">
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground md:col-span-2">
                 {n.date}
               </p>
@@ -46,8 +48,9 @@ export function NewsPage() {
               </h3>
               <img
                 src={n.image}
-                alt=""
+                alt={n.title}
                 loading="lazy"
+                decoding="async"
                 className="pointer-events-none hidden h-28 w-20 rotate-6 object-cover opacity-0 transition-all duration-500 group-hover:rotate-0 group-hover:opacity-100 md:col-span-2 md:block md:justify-self-end"
               />
             </article>

@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import { useEffect, useState, type CSSProperties } from "react";
 
 import { films, news, type Film } from "@/lib/films";
+import { useLikes } from "@/lib/likes";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { FilmCard, PlayButton, Reveal, TrailerModal } from "@/components/site";
 
@@ -10,9 +11,20 @@ const SLIDE_DURATION = 7000;
 
 function HeroCarousel() {
   const [index, setIndex] = useState(0);
+  const [nav, setNav] = useState(0);
   const [progress, setProgress] = useState(0);
   const [trailer, setTrailer] = useState(false);
   const film = films[index]!;
+  const { likes, toggle: toggleLike } = useLikes();
+  const liked = likes.includes(film.slug);
+
+  // Manual navigation: jump to a specific slide or step by delta, always
+  // wrapping. Bumping `nav` remounts the autoplay effect, so the timer and
+  // progress bar restart from zero on every manual change.
+  const goTo = (i: number) => {
+    setIndex(((i % films.length) + films.length) % films.length);
+    setNav((n) => n + 1);
+  };
 
   // NEON-style parallax: the frame drifts slower than the page while the
   // hero scrolls away (the wrapper is oversized so no gap can appear).
@@ -33,7 +45,7 @@ function HeroCarousel() {
       }
     }, 50);
     return () => window.clearInterval(id);
-  }, [index, trailer]);
+  }, [index, nav, trailer]);
 
   return (
     <section
@@ -53,6 +65,8 @@ function HeroCarousel() {
           <img
             src={film.poster}
             alt={film.title}
+            fetchPriority="high"
+            decoding="async"
             className={`absolute inset-0 h-full w-full object-cover ${index % 2 === 0 ? "hero-drift" : "hero-drift-alt"}`}
           />
         </motion.div>
@@ -98,12 +112,30 @@ function HeroCarousel() {
               className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
             >
               <PlayButton onClick={() => setTrailer(true)} color={film.accent} />
-              <Link
-                to={`/films/${film.slug}`}
-                className="border border-white/70 px-6 py-4 font-mono text-xs uppercase tracking-[0.25em] text-white transition-colors hover:border-[var(--hero-accent)] hover:bg-[var(--hero-accent)] hover:text-primary-foreground"
+              <button
+                type="button"
+                onClick={() => toggleLike(film.slug)}
+                aria-pressed={liked}
+                aria-label={liked ? `Unlike ${film.title}` : `Like ${film.title}`}
+                className={`flex h-14 w-14 items-center justify-center rounded-full border transition-colors ${
+                  liked
+                    ? "border-[var(--hero-accent)] bg-[var(--hero-accent)] text-primary-foreground"
+                    : "border-white/70 text-white hover:border-[var(--hero-accent)] hover:bg-[var(--hero-accent)] hover:text-primary-foreground"
+                }`}
               >
-                Get tickets
-              </Link>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill={liked ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                  aria-hidden
+                >
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
               <span className="font-mono text-xs uppercase tracking-[0.25em] text-white/75">
                 {film.year} · {film.genre}
               </span>
@@ -112,20 +144,63 @@ function HeroCarousel() {
         </AnimatePresence>
       </div>
 
-      <div className="absolute inset-x-0 bottom-10 z-10 flex justify-center gap-2.5">
-        {films.map((f, i) => (
-          <button
-            key={f.slug}
-            onClick={() => setIndex(i)}
-            aria-label={`Show ${f.title}`}
-            aria-current={i === index}
-            className={`h-2 rounded-full border transition-all duration-300 ${
-              i === index
-                ? "w-7 border-[var(--hero-accent)] bg-[var(--hero-accent)]"
-                : "w-2 border-white/60 hover:bg-white/40"
-            }`}
-          />
-        ))}
+      <div className="absolute inset-x-0 bottom-10 z-10 flex items-center justify-center gap-6 px-5 md:px-10">
+        <button
+          type="button"
+          onClick={() => goTo(index - 1)}
+          aria-label="Previous movie"
+          className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:border-[var(--hero-accent)] hover:bg-[var(--hero-accent)] hover:text-primary-foreground"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+            aria-hidden
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+
+        <div className="flex gap-2.5">
+          {films.map((f, i) => (
+            <button
+              key={f.slug}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Show ${f.title}`}
+              aria-current={i === index}
+              className={`h-2 rounded-full border transition-all duration-300 ${
+                i === index
+                  ? "w-7 border-[var(--hero-accent)] bg-[var(--hero-accent)]"
+                  : "w-2 border-white/60 hover:bg-white/40"
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => goTo(index + 1)}
+          aria-label="Next movie"
+          className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:border-[var(--hero-accent)] hover:bg-[var(--hero-accent)] hover:text-primary-foreground"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+            aria-hidden
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
       </div>
 
       <div className="absolute inset-x-0 bottom-0 z-10 h-[3px] bg-white/15">
@@ -142,9 +217,9 @@ function HeroCarousel() {
 
 export function HomePage() {
   usePageMeta({
-    title: "Lumen Pictures — Independent Cinema, Loud",
+    title: "Fragrant Nature — Independent Cinema, Loud",
     description:
-      "Lumen Pictures is an independent film studio releasing bold, award-winning cinema.",
+      "Fragrant Nature is an independent film studio releasing bold, award-winning cinema.",
   });
 
   const [, f1, f2, f3] = films as [Film, Film, Film, Film, ...Film[]];
@@ -168,7 +243,7 @@ export function HomePage() {
               to="/films"
               className="font-mono text-xs uppercase tracking-[0.25em] hover:text-neon-ink"
             >
-              All films →
+              All movies →
             </Link>
           </div>
           <div className="grid gap-5 md:grid-cols-12">
@@ -234,12 +309,12 @@ export function HomePage() {
         <div className="mx-auto max-w-[1600px] px-5 py-24 md:px-10">
           <Reveal>
             <p className="max-w-5xl font-display text-3xl md:text-6xl">
-              We make films that <span className="text-accent">refuse</span> to be ignored.
+              We make movies that <span className="text-accent">refuse</span> to be ignored.
             </p>
           </Reveal>
           <div className="mt-16 grid gap-px bg-border md:grid-cols-4">
             {[
-              ["42", "Films released"],
+              ["42", "Movies released"],
               ["118", "Festival awards"],
               ["9", "Oscar noms"],
               ["∞", "Midnight screenings"],

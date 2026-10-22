@@ -84,6 +84,17 @@
     background: var(--neon);
     color: var(--primary-foreground);
   }
+  /* Keyboard focus is visible everywhere (context-aware: bright ring on the
+     dark stages, deep green on the white pages). Mouse clicks stay clean. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
 }
 
 @utility font-display {

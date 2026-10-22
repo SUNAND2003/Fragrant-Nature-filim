@@ -8,6 +8,7 @@ import { HomePage } from "@/pages/home";
 import { FilmsPage } from "@/pages/films";
 import { FilmPage } from "@/pages/film";
 import { UpcomingPage } from "@/pages/upcoming";
+import { GalleryPage } from "@/pages/gallery";
 import { NewsPage } from "@/pages/news";
 import { AboutPage } from "@/pages/about";
 import { LoginPage } from "@/pages/login";
@@ -30,6 +31,7 @@ export function App() {
       <SiteHeader />
       <AnimatePresence mode="wait">
         <motion.main
+          id="main"
           key={location.pathname}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -48,6 +50,7 @@ export function App() {
               <Route path="/films" element={<FilmsPage />} />
               <Route path="/films/:slug" element={<FilmPage />} />
               <Route path="/upcoming" element={<UpcomingPage />} />
+              <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/news" element={<NewsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/login" element={<LoginPage />} />

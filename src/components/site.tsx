@@ -102,13 +102,14 @@ export function SiteHeader() {
           className="col-start-2 flex items-center justify-self-center"
           aria-label="Fragrant Nature — home"
         >
-          <img src={logo} alt="Fragrant Nature Film Productions" className="w-40 md:w-56" />
+          <img src={logo} alt="Fragrant Nature Film Productions" className="w-32 sm:w-40 md:w-56" />
         </Link>
         <div className="col-start-3 flex items-center justify-self-end gap-1">
+          {/* Login sits on sm+ only — on phones it crowded the centred logo. */}
           <Link
             to="/login"
             aria-label="Login"
-            className="p-2.5 transition-colors hover:text-neon-ink"
+            className="hidden p-2.5 transition-colors hover:text-neon-ink sm:block"
           >
             <svg
               viewBox="0 0 24 24"

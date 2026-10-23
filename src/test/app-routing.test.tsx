@@ -14,7 +14,8 @@ describe("App routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { name: /red highway/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /red highway/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /award winners/i })).toBeInTheDocument();
     expect(screen.queryByText(/page not found/i)).not.toBeInTheDocument();
   });
 
@@ -50,6 +51,17 @@ describe("App routing", () => {
     // Each film gets its own heading plus an 8-photo set (two rows of four).
     expect(screen.getByRole("heading", { name: /^red highway$/i })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /open red highway/i })).toHaveLength(8);
+  });
+
+  it("renders the awards page for /awards", () => {
+    render(
+      <MemoryRouter initialEntries={["/awards"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("heading", { name: /awards/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /all honors/i })).toBeInTheDocument();
   });
 
   it("renders the login page with only email and password fields", () => {

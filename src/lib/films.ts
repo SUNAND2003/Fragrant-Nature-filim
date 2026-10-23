@@ -204,3 +204,86 @@ export const news = [
     image: p3,
   },
 ];
+
+export type Award = {
+  id: string;
+  festival: string;
+  award: string;
+  year: number;
+  filmSlug: string;
+  category: "Major Prize" | "Selection" | "Craft" | "Audience";
+  citation: string;
+};
+
+export const awardsList: Award[] = [
+  {
+    id: "sundance-drown",
+    festival: "Sundance Film Festival",
+    award: "Grand Jury Prize — U.S. Dramatic",
+    year: 2026,
+    filmSlug: "drown",
+    category: "Major Prize",
+    citation:
+      "Awarded for transcendent psychological depth, visceral sound design, and unmatched underwater cinematography.",
+  },
+  {
+    id: "cannes-red-highway",
+    festival: "Cannes Film Festival",
+    award: "Official Selection — In Competition",
+    year: 2026,
+    filmSlug: "red-highway",
+    category: "Selection",
+    citation:
+      "Selected for its unflinching neo-western vision and magnetic lead performance.",
+  },
+  {
+    id: "tiff-red-highway",
+    festival: "Toronto International Film Festival",
+    award: "Best Cinematography Award",
+    year: 2026,
+    filmSlug: "red-highway",
+    category: "Craft",
+    citation:
+      "Honored for breathtaking desert vistas bathed in anamorphic crimson illumination.",
+  },
+  {
+    id: "venice-blue-hour",
+    festival: "Venice International Film Festival",
+    award: "Silver Lion — Grand Jury Prize",
+    year: 2025,
+    filmSlug: "blue-hour",
+    category: "Major Prize",
+    citation:
+      "Recognized for reviving the neo-noir language with haunting contemporary precision.",
+  },
+  {
+    id: "fantastic-blood-moon",
+    festival: "Fantastic Fest",
+    award: "Audience Award — Best Horror Feature",
+    year: 2026,
+    filmSlug: "blood-moon-farm",
+    category: "Audience",
+    citation:
+      "Voted by attendees as the most gripping, heart-stopping midnight horror experience of the year.",
+  },
+  {
+    id: "berlinale-afterbloom",
+    festival: "Berlin International Film Festival",
+    award: "Official Opening Film — Panorama",
+    year: 2027,
+    filmSlug: "afterbloom",
+    category: "Selection",
+    citation:
+      "Chosen to open the festival for its visionary worldbuilding and groundbreaking visual scale.",
+  },
+  {
+    id: "sxsw-rooftop-summer",
+    festival: "SXSW Film Festival",
+    award: "Official Selection — Narrative Spotlight",
+    year: 2027,
+    filmSlug: "rooftop-summer",
+    category: "Selection",
+    citation:
+      "Celebrated as a kinetic, sun-drenched indie anthem capturing the bittersweet rush of youth.",
+  },
+];

@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router";
 import { news } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { PageTitle, Reveal } from "@/components/site";
@@ -8,6 +10,23 @@ export function NewsPage() {
     description: "Awards, trailers, interviews and studio news from Fragrant Nature.",
   });
 
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const id = hash.replace("#", "");
+    const el = document.getElementById(id);
+    if (el) {
+      const timer = setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [hash]);
+
   const lead = news[0]!;
   const rest = news.slice(1);
   return (
@@ -15,7 +34,12 @@ export function NewsPage() {
       <PageTitle eyebrow="Dispatch" title="News" />
       <div className="mx-auto max-w-[1600px] px-5 pb-24 md:px-10">
         <Reveal>
-          <article className="group grid gap-8 border-y border-border py-10 md:grid-cols-2">
+          <article
+            id={`news-${lead.id}`}
+            className={`group grid scroll-mt-28 gap-8 border-y border-border py-10 transition-all duration-700 md:grid-cols-2 ${
+              hash === `#news-${lead.id}` ? "rounded-2xl bg-neon-ink/5 p-4 ring-1 ring-neon-ink/50" : ""
+            }`}
+          >
             <div className="aspect-video overflow-hidden rounded-2xl">
               <img
                 src={lead.image}
@@ -36,7 +60,12 @@ export function NewsPage() {
         </Reveal>
         {rest.map((n, i) => (
           <Reveal key={n.id} delay={i * 0.05}>
-            <article className="group relative grid items-center gap-6 overflow-hidden border-b border-border py-8 md:grid-cols-12">
+            <article
+              id={`news-${n.id}`}
+              className={`group relative grid scroll-mt-28 items-center gap-6 overflow-hidden border-b border-border py-8 transition-all duration-700 md:grid-cols-12 ${
+                hash === `#news-${n.id}` ? "rounded-2xl bg-neon-ink/5 px-4 ring-1 ring-neon-ink/50" : ""
+              }`}
+            >
               <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground md:col-span-2">
                 {n.date}
               </p>

@@ -8,6 +8,7 @@ import { getFilm, type Film } from "@/lib/films";
 const nav = [
   { to: "/films", label: "Movies" },
   { to: "/upcoming", label: "Upcoming" },
+  { to: "/awards", label: "Awards" },
   { to: "/gallery", label: "Gallery" },
   { to: "/news", label: "News" },
   { to: "/about", label: "About" },
@@ -105,26 +106,6 @@ export function SiteHeader() {
           <img src={logo} alt="Fragrant Nature Film Productions" className="w-32 sm:w-40 md:w-56" />
         </Link>
         <div className="col-start-3 flex items-center justify-self-end gap-1">
-          {/* Login sits on sm+ only — on phones it crowded the centred logo. */}
-          <Link
-            to="/login"
-            aria-label="Login"
-            className="hidden p-2.5 transition-colors hover:text-neon-ink sm:block"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5 md:h-6 md:w-6"
-              aria-hidden
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </Link>
           <button
             type="button"
             onClick={() => setLikesOpen((o) => !o)}

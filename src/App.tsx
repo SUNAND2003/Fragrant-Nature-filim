@@ -10,6 +10,7 @@ import { FilmPage } from "@/pages/film";
 import { UpcomingPage } from "@/pages/upcoming";
 import { GalleryPage } from "@/pages/gallery";
 import { NewsPage } from "@/pages/news";
+import { AwardsPage } from "@/pages/awards";
 import { AboutPage } from "@/pages/about";
 import { LoginPage } from "@/pages/login";
 import { NotFoundPage } from "@/pages/not-found";
@@ -50,6 +51,7 @@ export function App() {
               <Route path="/films" element={<FilmsPage />} />
               <Route path="/films/:slug" element={<FilmPage />} />
               <Route path="/upcoming" element={<UpcomingPage />} />
+              <Route path="/awards" element={<AwardsPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/news" element={<NewsPage />} />
               <Route path="/about" element={<AboutPage />} />

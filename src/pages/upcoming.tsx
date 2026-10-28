@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useFilms } from "@/lib/content";
 import type { Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, PlayButton, Reveal, TrailerModal } from "@/components/site";
+import { PageTitle, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
 
 export function UpcomingPage() {
   usePageMeta({
@@ -45,6 +45,7 @@ export function UpcomingPage() {
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">{f.synopsis}</p>
               <div className="mt-10 flex flex-wrap items-center gap-8">
                 <PlayButton onClick={() => setFilm(f)} label="Teaser" />
+                <ScreenRequestButton film={f} />
                 <Link
                   to={`/films/${f.slug}`}
                   className="font-sans text-xs font-bold uppercase tracking-tight text-foreground underline-offset-8 transition-colors hover:text-neon-ink hover:underline"

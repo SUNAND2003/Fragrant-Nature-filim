@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-mot
 import { useAwards, useFilmLookup } from "@/lib/content";
 import type { Award, Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, PlayButton, Reveal, TrailerModal } from "@/components/site";
+import { PageTitle, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
 
 const categories = ["All", "Major Prize", "Selection", "Craft", "Audience"] as const;
 
@@ -175,6 +175,7 @@ function FeaturedHonor({
             {film && (
               <>
                 <PlayButton onClick={() => onTrailer(film)} label="Trailer" color={film.accent} />
+                <ScreenRequestButton film={film} color={film.accent} />
                 <Link
                   to={`/films/${film.slug}`}
                   className="font-sans text-xs font-bold uppercase tracking-tight underline-offset-8 hover:text-neon-ink hover:underline"

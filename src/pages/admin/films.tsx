@@ -42,6 +42,7 @@ type FilmForm = {
   trailer: string;
   order: number;
   featured: boolean;
+  screenRequest: boolean;
   poster: string;
 };
 
@@ -65,6 +66,7 @@ const empty: FilmForm = {
   trailer: "",
   order: 0,
   featured: false,
+  screenRequest: true,
   poster: "",
 };
 
@@ -90,7 +92,20 @@ export function FilmsSection() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setItems(await api.get<Film[]>("/api/films"));
+      const data = await api.get<Film[]>("/api/films");
+      // Newly added films show first (by createdAt, _id, or year descending)
+      const sorted = [...data].sort((a, b) => {
+        const aDoc = a as Film & { createdAt?: string; _id?: string };
+        const bDoc = b as Film & { createdAt?: string; _id?: string };
+        if (bDoc.createdAt && aDoc.createdAt) {
+          return new Date(bDoc.createdAt).getTime() - new Date(aDoc.createdAt).getTime();
+        }
+        if (bDoc._id && aDoc._id) {
+          return bDoc._id.localeCompare(aDoc._id);
+        }
+        return (b.year ?? 0) - (a.year ?? 0);
+      });
+      setItems(sorted);
     } catch (error) {
       reportError(error, "Could not load films");
     } finally {
@@ -164,6 +179,7 @@ export function FilmsSection() {
       trailer: film.trailer ?? "",
       order: film.order ?? 0,
       featured: film.featured ?? false,
+      screenRequest: film.screenRequest ?? true,
       poster: film.poster,
     });
   };
@@ -194,6 +210,7 @@ export function FilmsSection() {
         accent: form.accent.trim(),
         trailer: form.trailer.trim(),
         featured: form.featured,
+        screenRequest: form.screenRequest,
         order: Number(form.order) || 0,
         poster: form.poster.trim(),
       };
@@ -201,8 +218,12 @@ export function FilmsSection() {
         await api.put(`/api/films/${editingId}`, payload, { auth: true });
         toast.success("Film updated");
       } else {
-        await api.post("/api/films", payload, { auth: true });
+        const created = await api.post<Film>("/api/films", payload, { auth: true });
         toast.success("Film created");
+        // Ensure the newly created film immediately shows first
+        if (created) {
+          setItems((prev) => [created, ...prev.filter((item) => item.slug !== created.slug)]);
+        }
       }
       setEditingId(null);
       setForm(empty);
@@ -468,20 +489,32 @@ export function FilmsSection() {
             />
           </Field>
 
-          <SwitchInput
-            label="Featured"
-            checked={form.featured}
-            onCheckedChange={(featured) => setForm({ ...form, featured })}
-          />
-
-          <Field label="Poster">
+          <Field
+            label="Poster"
+            hint="Recommended size: 1200 × 1800 px (2:3 portrait aspect ratio). Optimal formats: JPG, PNG, WebP."
+          >
             <ImagePicker
               value={form.poster}
               onChange={(poster) => setForm({ ...form, poster })}
               kind="poster"
               label="Poster"
+              recommendedSize="1200 × 1800 px (2:3 portrait)"
             />
           </Field>
+
+          <div className="grid gap-3">
+            <SwitchInput
+              label="Featured in carousel"
+              checked={form.featured}
+              onCheckedChange={(featured) => setForm({ ...form, featured })}
+            />
+
+            <SwitchInput
+              label="Enable Screen Request Button"
+              checked={form.screenRequest}
+              onCheckedChange={(screenRequest) => setForm({ ...form, screenRequest })}
+            />
+          </div>
 
           <div className="flex gap-2">
             <Button type="submit" className="flex-1 rounded-none" disabled={busy}>
@@ -547,6 +580,15 @@ export function FilmsSection() {
                         {film.featured && (
                           <span className="border border-neon-ink px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-neon-ink">
                             Featured
+                          </span>
+                        )}
+                        {film.screenRequest !== false ? (
+                          <span className="border border-emerald-500/40 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                            Screen Request ON
+                          </span>
+                        ) : (
+                          <span className="border border-border px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            Screen Request OFF
                           </span>
                         )}
                       </div>

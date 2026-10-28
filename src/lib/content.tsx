@@ -109,9 +109,33 @@ async function load(): Promise<Resources> {
     ]);
 
   return {
-    films: films.length ? films : staticFilms,
+    films: films.length
+      ? [...films].sort((a, b) => {
+          const aDoc = a as Film & { _id?: string; createdAt?: string };
+          const bDoc = b as Film & { _id?: string; createdAt?: string };
+          if (bDoc.createdAt && aDoc.createdAt) {
+            return new Date(bDoc.createdAt).getTime() - new Date(aDoc.createdAt).getTime();
+          }
+          if (bDoc._id && aDoc._id) {
+            return bDoc._id.localeCompare(aDoc._id);
+          }
+          return (b.year ?? 0) - (a.year ?? 0);
+        })
+      : staticFilms,
     news: news.length ? news : staticNews,
-    awards: awards.length ? awards : awardsList,
+    awards: awards.length
+      ? [...awards].sort((a, b) => {
+          const aDoc = a as Award & { _id?: string; createdAt?: string };
+          const bDoc = b as Award & { _id?: string; createdAt?: string };
+          if (bDoc.createdAt && aDoc.createdAt) {
+            return new Date(bDoc.createdAt).getTime() - new Date(aDoc.createdAt).getTime();
+          }
+          if (bDoc._id && aDoc._id) {
+            return bDoc._id.localeCompare(aDoc._id);
+          }
+          return (b.year ?? 0) - (a.year ?? 0);
+        })
+      : awardsList,
     categories,
     subcategories,
     settings: { ...defaultSettings, ...settings },

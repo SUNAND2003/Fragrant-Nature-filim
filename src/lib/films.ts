@@ -47,6 +47,8 @@ export type Film = {
   _id?: string;
   /** Hero carousel membership (API only; static data treats every film as featured). */
   featured?: boolean;
+  /** Whether the "Screen Request" button is enabled on the UI for this film. */
+  screenRequest?: boolean;
   /** Trailer watch URL shown on the film page / trailer modal. */
   trailer?: string;
   order?: number;
@@ -93,6 +95,7 @@ export const films: Film[] = [
     release: "In theaters now",
     laurels: ["Cannes — Official Selection", "Best Cinematography, TIFF"],
     accent: "#E01B24",
+    screenRequest: true,
   },
   {
     slug: "drown",
@@ -111,6 +114,7 @@ export const films: Film[] = [
     release: "In theaters now",
     laurels: ["Sundance — Grand Jury Prize"],
     accent: "#2DD4BF",
+    screenRequest: true,
   },
   {
     slug: "blood-moon-farm",
@@ -129,6 +133,7 @@ export const films: Film[] = [
     release: "Streaming now",
     laurels: ["Fantastic Fest — Audience Award"],
     accent: "#FB5607",
+    screenRequest: true,
   },
   {
     slug: "blue-hour",
@@ -147,6 +152,7 @@ export const films: Film[] = [
     release: "Streaming now",
     laurels: ["Venice — Silver Lion"],
     accent: "#38BDF8",
+    screenRequest: true,
   },
   {
     slug: "afterbloom",
@@ -165,6 +171,7 @@ export const films: Film[] = [
     release: "Feb 14, 2027",
     laurels: ["Berlinale — Opening Film"],
     accent: "#E879F9",
+    screenRequest: true,
   },
   {
     slug: "rooftop-summer",
@@ -183,6 +190,7 @@ export const films: Film[] = [
     release: "Mar 27, 2027",
     laurels: ["SXSW — Official Selection"],
     accent: "#FBBF24",
+    screenRequest: true,
   },
   {
     slug: "porcelain",
@@ -201,6 +209,7 @@ export const films: Film[] = [
     release: "May 8, 2027",
     laurels: ["Coming soon"],
     accent: "#C084FC",
+    screenRequest: true,
   },
 ];
 

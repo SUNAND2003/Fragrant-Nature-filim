@@ -156,24 +156,6 @@ export function GallerySection() {
     }));
   };
 
-  // Quick helper to populate stock still frames from public/gallery/
-  const handleAddSampleStills = () => {
-    const startIdx = (form.images.length % 35) + 1;
-    const samples: GalleryImage[] = Array.from({ length: 4 }, (_, k) => {
-      const num = String(((startIdx + k - 1) % 42) + 1).padStart(2, "0");
-      return {
-        url: `/gallery/g${num}.jpg`,
-        caption: `Production still frame ${num}`,
-        order: form.images.length + k + 1,
-      };
-    });
-    setForm((prev) => ({
-      ...prev,
-      images: [...prev.images, ...samples],
-    }));
-    toast.success("Added 4 sample still frames from /gallery/");
-  };
-
   // Upload multiple images directly into the current form set
   const handleUploadMultiple = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -549,39 +531,47 @@ export function GallerySection() {
             <Field
               label="Key Art / Poster URL"
               htmlFor="gallery-film-poster"
-              hint="Optional cover image"
+              hint="Recommended size: 1200 × 1800 px (2:3 portrait aspect ratio). Cover image for gallery set."
             >
-              <div className="flex gap-2">
-                <TextInput
-                  id="gallery-film-poster"
-                  value={form.poster}
-                  onChange={(e) => setForm({ ...form, poster: e.target.value })}
-                  placeholder="/images/films/hero.jpg"
-                  className="flex-1"
-                />
-                <input
-                  ref={posterFileRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => void handleUploadPoster(e.target.files?.[0])}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={posterUploading}
-                  onClick={() => posterFileRef.current?.click()}
-                  className="rounded-none border-neutral-300 text-xs px-3 h-10 shrink-0 cursor-pointer hover:bg-neutral-100"
-                  title="Upload poster image from computer"
-                >
-                  {posterUploading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Upload className="h-3.5 w-3.5" />
-                  )}
-                  Upload
-                </Button>
+              <div className="space-y-1.5">
+                <div className="flex gap-2">
+                  <TextInput
+                    id="gallery-film-poster"
+                    value={form.poster}
+                    onChange={(e) => setForm({ ...form, poster: e.target.value })}
+                    placeholder="/images/films/hero.jpg"
+                    className="flex-1"
+                  />
+                  <input
+                    ref={posterFileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => void handleUploadPoster(e.target.files?.[0])}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={posterUploading}
+                    onClick={() => posterFileRef.current?.click()}
+                    className="rounded-none border-neutral-300 text-xs px-3 h-10 shrink-0 cursor-pointer hover:bg-neutral-100"
+                    title="Upload poster image from computer"
+                  >
+                    {posterUploading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    Upload
+                  </Button>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+                  <span className="font-semibold uppercase tracking-wider text-[10px]">Perfect size:</span>
+                  <span className="rounded border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 font-bold text-neutral-800">
+                    1200 × 1800 px (2:3 portrait)
+                  </span>
+                </div>
               </div>
             </Field>
           </div>
@@ -605,10 +595,13 @@ export function GallerySection() {
             }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-neutral-900" />
                 <span className="font-sans text-xs font-bold uppercase tracking-widest text-neutral-900">
                   Still Photos in Set ({form.images.length})
+                </span>
+                <span className="rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5 font-mono text-[10px] font-bold text-neutral-800">
+                  Perfect size: 1920 × 1200 px (16:10 cinema)
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -639,19 +632,12 @@ export function GallerySection() {
                     </>
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleAddSampleStills}
-                  className="inline-flex items-center gap-1 rounded-none border border-neutral-300 bg-neutral-100 px-2 py-1 font-mono text-[10px] font-bold text-neutral-800 hover:bg-neutral-200 cursor-pointer"
-                  title="Add 4 sample gallery stills"
-                >
-                  + 4 Samples
-                </button>
               </div>
             </div>
 
             <p className="font-sans text-xs text-muted-foreground leading-relaxed">
               Photos appear in the public 16:10 cinema grid and open in the full-screen lightbox.
+              Optimal resolution is <strong>1920 × 1200 px (16:10)</strong> or <strong>1920 × 1080 px (16:9)</strong>.
               Drag & drop image files anywhere in this box or click{" "}
               <strong className="text-neutral-900 font-semibold">Upload Photos</strong>.
             </p>
@@ -709,10 +695,15 @@ export function GallerySection() {
 
             {/* Input to Add New Image */}
             <div className="space-y-2.5 border-t border-neutral-300 pt-3">
-              <div className="flex items-center justify-between">
-                <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-neutral-800">
-                  Add Single Photo Frame
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-neutral-800">
+                    Add Single Photo Frame
+                  </p>
+                  <span className="rounded border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-neutral-700">
+                    Size: 1920 × 1200 px (16:10)
+                  </span>
+                </div>
                 <input
                   ref={singleFileRef}
                   type="file"
@@ -971,10 +962,15 @@ export function GallerySection() {
                   {/* Inline Quick Add Image Box */}
                   {isQuickAdding && (
                     <div className="mt-3 rounded border border-neutral-300 bg-neutral-50 p-3 space-y-2 shadow-inner">
-                      <div className="flex items-center justify-between">
-                        <span className="font-sans text-xs font-bold uppercase tracking-wider text-neutral-900">
-                          Quick Add Photo to {item.filmTitle}
-                        </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-sans text-xs font-bold uppercase tracking-wider text-neutral-900">
+                            Quick Add Photo to {item.filmTitle}
+                          </span>
+                          <span className="rounded border border-neutral-300 bg-neutral-200/70 px-1.5 py-0.5 font-mono text-[10px] font-bold text-neutral-700">
+                            Size: 1920 × 1200 px (16:10)
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setQuickAddId(null)}

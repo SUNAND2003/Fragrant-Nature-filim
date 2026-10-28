@@ -66,6 +66,7 @@ async function seed() {
           category: categoryBySlug.get("feature-films")._id,
           subcategories: subcategory ? [subcategory._id] : [],
           featured: index < 4,
+          screenRequest: film.screenRequest ?? true,
           order: index,
         },
       },

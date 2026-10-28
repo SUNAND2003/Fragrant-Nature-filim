@@ -31,6 +31,7 @@ const filmFields = {
   accent: z.string().trim().default(""),
   trailer: z.string().trim().default(""),
   featured: boolish.default(false),
+  screenRequest: boolish.default(true),
   category: z.union([z.string().trim(), z.null()]).optional(),
   subcategories: z.array(z.string().trim()).default([]),
   order: z.coerce.number().int().default(0),
@@ -110,7 +111,7 @@ router.get("/", async (req, res) => {
     filter.$or = [{ title: rx }, { director: rx }, { genre: rx }, { synopsis: rx }, { cast: rx }];
   }
   const films = await Film.find(filter)
-    .sort({ order: 1, year: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .populate("category", HYDRATE)
     .populate("subcategories", HYDRATE);
   return res.json(films);

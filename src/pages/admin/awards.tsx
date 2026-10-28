@@ -18,7 +18,7 @@ import {
 } from "@/pages/admin/ui";
 
 /** The API adds `_id`, which is what PUT/DELETE address. */
-type AdminAward = Award & { _id: string };
+type AdminAward = Award & { _id: string; createdAt?: string };
 
 const CATEGORIES = ["Major Prize", "Selection", "Craft", "Audience"];
 
@@ -50,7 +50,18 @@ export function AwardsSection() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setItems(await api.get<AdminAward[]>("/api/awards"));
+      const data = await api.get<AdminAward[]>("/api/awards");
+      // Newly created awards show first (by createdAt, _id, or year descending)
+      const sorted = [...data].sort((a, b) => {
+        if (b.createdAt && a.createdAt) {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        if (b._id && a._id) {
+          return b._id.localeCompare(a._id);
+        }
+        return (b.year ?? 0) - (a.year ?? 0);
+      });
+      setItems(sorted);
     } catch (error) {
       reportError(error, "Could not load honors");
     } finally {
@@ -106,8 +117,12 @@ export function AwardsSection() {
         await api.put(`/api/awards/${editingId}`, payload, { auth: true });
         toast.success("Honor updated");
       } else {
-        await api.post("/api/awards", payload, { auth: true });
+        const created = await api.post<AdminAward>("/api/awards", payload, { auth: true });
         toast.success("Honor created");
+        // Ensure the newly created award is displayed first at the top
+        if (created) {
+          setItems((prev) => [created, ...prev.filter((item) => item._id !== created._id)]);
+        }
       }
       setEditingId(null);
       setForm(empty);

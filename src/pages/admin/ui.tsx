@@ -109,33 +109,71 @@ export function SwitchInput({
   checked,
   onCheckedChange,
   label,
+  className,
 }: {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   label: string;
+  className?: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-none border border-border bg-background px-4 py-3">
-      <span className="font-sans text-xs font-bold uppercase tracking-widest">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onCheckedChange(!checked)}
+    <div
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      tabIndex={0}
+      onClick={() => onCheckedChange(!checked)}
+      onKeyDown={(event) => {
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          onCheckedChange(!checked);
+        }
+      }}
+      className={cn(
+        "group flex cursor-pointer items-center justify-between gap-4 rounded-none border px-4 py-3.5 transition-all select-none",
+        checked
+          ? "border-neutral-900 bg-neutral-900/[0.04] text-foreground shadow-2xs"
+          : "border-border bg-background text-muted-foreground hover:border-foreground/40",
+        className,
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={cn(
+            "font-sans text-xs font-bold uppercase tracking-wider transition-colors",
+            checked ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+          )}
+        >
+          {label}
+        </span>
+        <span
+          className={cn(
+            "rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors",
+            checked
+              ? "bg-neutral-900 text-white dark:bg-white dark:text-black"
+              : "bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
+          )}
+        >
+          {checked ? "ON" : "OFF"}
+        </span>
+      </div>
+
+      <div
         className={cn(
-          "relative h-6 w-11 shrink-0 border transition-colors",
-          checked ? "border-neon bg-neon" : "border-border bg-muted",
+          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out",
+          checked
+            ? "bg-neutral-900 dark:bg-white"
+            : "bg-neutral-300 dark:bg-neutral-700",
         )}
       >
         <span
           className={cn(
-            "absolute top-0.5 h-4 w-4 bg-foreground transition-transform",
-            checked ? "translate-x-6" : "translate-x-0.5",
+            "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ease-in-out dark:bg-black",
+            checked ? "translate-x-5" : "translate-x-0",
           )}
         />
-      </button>
-    </label>
+      </div>
+    </div>
   );
 }
 
@@ -149,14 +187,26 @@ export function ImagePicker({
   onChange,
   kind = "misc",
   label = "Image",
+  recommendedSize,
 }: {
   value: string;
   onChange: (url: string) => void;
   kind?: string;
   label?: string;
+  recommendedSize?: string;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+
+  const sizeHint =
+    recommendedSize ??
+    (kind === "poster"
+      ? "1200 × 1800 px (2:3 portrait)"
+      : kind === "news"
+      ? "1600 × 900 px (16:9 widescreen)"
+      : kind === "gallery"
+      ? "1920 × 1200 px (16:10 cinema)"
+      : "1920 × 1080 px");
 
   const pick = async (file?: File) => {
     if (!file) return;
@@ -176,13 +226,18 @@ export function ImagePicker({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative h-40 w-28 shrink-0 overflow-hidden border border-border bg-muted">
+        <div className="relative h-40 w-28 shrink-0 overflow-hidden border border-border bg-muted flex flex-col items-center justify-center p-2 text-center">
           {value ? (
             <img src={value} alt="" className="h-full w-full object-cover" />
           ) : (
-            <span className="flex h-full w-full items-center justify-center font-sans text-[10px] uppercase tracking-widest text-muted-foreground">
-              No image
-            </span>
+            <div className="flex flex-col items-center justify-center gap-1 text-center">
+              <span className="font-sans text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                No image
+              </span>
+              <span className="font-mono text-[9px] text-muted-foreground/80 leading-tight">
+                {kind === "poster" ? "2:3 ratio" : kind === "news" ? "16:9 ratio" : "Standard"}
+              </span>
+            </div>
           )}
           {busy && (
             <span className="absolute inset-0 flex items-center justify-center bg-background/70">
@@ -199,16 +254,26 @@ export function ImagePicker({
             className="hidden"
             onChange={(event) => void pick(event.target.files?.[0])}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-none"
-            disabled={busy}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload /> {busy ? "Uploading…" : "Upload image"}
-          </Button>
-          <p className="font-sans text-xs text-muted-foreground">…or paste an image URL</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-none font-sans text-xs font-bold uppercase tracking-wide"
+              disabled={busy}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Upload className="h-3.5 w-3.5" /> {busy ? "Uploading…" : "Upload image"}
+            </Button>
+          </div>
+          <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground/70 uppercase tracking-wider text-[10px]">
+              Perfect size:
+            </span>
+            <span className="rounded border border-border bg-muted/80 px-2 py-0.5 font-bold text-foreground">
+              {sizeHint}
+            </span>
+          </div>
+          <p className="font-sans text-xs text-muted-foreground">…or paste a direct image URL below</p>
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useFilmBySlug, useFilms } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { FilmCard, PlayButton, Reveal, TrailerModal } from "@/components/site";
+import { FilmCard, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
 
 function FilmNotFound() {
   return (
@@ -88,6 +88,7 @@ export function FilmPage() {
           <p className="mt-2 text-xl italic text-white/75 md:text-2xl">"{film.tagline}"</p>
           <div className="mt-8 flex flex-wrap items-center gap-8">
             <PlayButton onClick={() => setOpen(true)} />
+            <ScreenRequestButton film={film} />
             <span className="rounded-full border border-neon-ink/50 bg-black/40 px-6 py-3 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink backdrop-blur">
               {film.release}
             </span>

@@ -233,12 +233,18 @@ export function NewsSection() {
             />
           </Field>
 
-          <ImagePicker
-            kind="news"
-            label="Article image"
-            value={form.image}
-            onChange={(url) => setForm({ ...form, image: url })}
-          />
+          <Field
+            label="Article Image"
+            hint="Recommended size: 1600 × 900 px (16:9 widescreen aspect ratio). Optimal formats: JPG, PNG, WebP."
+          >
+            <ImagePicker
+              kind="news"
+              label="Article image"
+              value={form.image}
+              onChange={(url) => setForm({ ...form, image: url })}
+              recommendedSize="1600 × 900 px (16:9 widescreen)"
+            />
+          </Field>
 
           <Field label="Linked film" htmlFor="news-film" hint="Optional — shown as a related link.">
             <SelectInput

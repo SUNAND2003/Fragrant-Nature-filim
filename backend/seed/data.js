@@ -56,6 +56,7 @@ export const films = [
     release: "In theaters now",
     laurels: ["Cannes — Official Selection", "Best Cinematography, TIFF"],
     accent: "#E01B24",
+    screenRequest: true,
   },
   {
     slug: "drown",
@@ -74,6 +75,7 @@ export const films = [
     release: "In theaters now",
     laurels: ["Sundance — Grand Jury Prize"],
     accent: "#2DD4BF",
+    screenRequest: true,
   },
   {
     slug: "blood-moon-farm",
@@ -92,6 +94,7 @@ export const films = [
     release: "Streaming now",
     laurels: ["Fantastic Fest — Audience Award"],
     accent: "#FB5607",
+    screenRequest: true,
   },
   {
     slug: "blue-hour",
@@ -110,6 +113,7 @@ export const films = [
     release: "Streaming now",
     laurels: ["Venice — Silver Lion"],
     accent: "#38BDF8",
+    screenRequest: true,
   },
   {
     slug: "afterbloom",
@@ -128,6 +132,7 @@ export const films = [
     release: "Feb 14, 2027",
     laurels: ["Berlinale — Opening Film"],
     accent: "#E879F9",
+    screenRequest: true,
   },
   {
     slug: "rooftop-summer",
@@ -146,6 +151,7 @@ export const films = [
     release: "Mar 27, 2027",
     laurels: ["SXSW — Official Selection"],
     accent: "#FBBF24",
+    screenRequest: true,
   },
   {
     slug: "porcelain",
@@ -164,6 +170,7 @@ export const films = [
     release: "May 8, 2027",
     laurels: ["Coming soon"],
     accent: "#C084FC",
+    screenRequest: true,
   },
 ];
 

@@ -20,6 +20,7 @@ const filmSchema = new mongoose.Schema(
     accent: { type: String, default: "" },
     trailer: { type: String, default: "" },
     featured: { type: Boolean, default: false },
+    screenRequest: { type: Boolean, default: true },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
     subcategories: {
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subcategory" }],

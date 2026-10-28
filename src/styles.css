@@ -306,3 +306,77 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Admin Dashboard & Portal Typography
+   Custom font style & refined, natural letter-spacing
+   ========================================================================== */
+
+.admin-shell {
+  font-family: "Plus Jakarta Sans", var(--font-sans);
+  letter-spacing: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Page titles, section headings, and display text */
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell .font-display {
+  font-family: "Montserrat", sans-serif !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+
+/* Sidebar navigation links */
+.admin-shell aside nav a,
+.admin-shell header nav a {
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  letter-spacing: 0.05em !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+}
+
+/* Action buttons and interactive triggers */
+.admin-shell button,
+.admin-shell .btn,
+.admin-shell [role="button"] {
+  letter-spacing: 0.04em !important;
+  font-weight: 600 !important;
+}
+
+/* Form labels, fieldsets, and table headers */
+.admin-shell label,
+.admin-shell th {
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+}
+
+/* Inputs, textareas, selects */
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell select {
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  letter-spacing: normal !important;
+}
+
+/* Paragraphs, descriptions, table cells, hints */
+.admin-shell p,
+.admin-shell td {
+  letter-spacing: normal;
+  line-height: 1.6;
+}
+
+/* Badges, small tags, system metrics */
+.admin-shell .tracking-widest {
+  letter-spacing: 0.08em !important;
+}
+
+.admin-shell .tracking-wider {
+  letter-spacing: 0.05em !important;
+}
+

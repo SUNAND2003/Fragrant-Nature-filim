@@ -35,26 +35,26 @@ function AdminShell() {
 
       {/* Black sidebar: the wordmark is white artwork, so it needs the dark plate.
           `theme-dark` scopes the palette so every label/border stays legible on it. */}
-      <aside className="theme-dark fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-black text-foreground lg:flex">
-        <div className="flex flex-col gap-3 border-b border-border px-6 py-5">
+      <aside className="theme-dark fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border bg-black text-foreground lg:flex">
+        <div className="flex flex-col gap-3.5 border-b border-border px-6 py-6">
           <img
             src={siteLogo}
             alt="Fragrant Nature Film Creations"
-            className="h-auto w-44 drop-shadow-[0_2px_10px_rgba(255,255,255,0.15)]"
+            className="h-auto w-56 drop-shadow-[0_2px_12px_rgba(255,255,255,0.18)]"
           />
-          <p className="font-sans text-[10px] uppercase tracking-widest text-white/80 font-semibold">
+          <p className="font-sans text-xs uppercase tracking-widest text-white/80 font-bold">
             Studio Admin
           </p>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto bg-black p-3">
+        <nav className="flex-1 space-y-1.5 overflow-y-auto bg-black p-4">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `block border px-4 py-2.5 font-sans text-xs font-bold uppercase tracking-widest transition-colors ${
+                `block border px-4 py-3 font-sans text-sm font-bold uppercase tracking-wide transition-colors ${
                   isActive
                     ? "border-white bg-white text-black shadow-sm"
                     : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
@@ -66,52 +66,52 @@ function AdminShell() {
           ))}
         </nav>
 
-        <div className="space-y-2 border-t border-border p-3">
+        <div className="space-y-2 border-t border-border p-4">
           <NavLink
             to="/"
-            className="flex items-center gap-2 px-4 py-2 font-sans text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 px-4 py-2.5 font-sans text-xs font-bold uppercase tracking-wide text-muted-foreground hover:text-foreground"
           >
-            <ExternalLink className="h-3.5 w-3.5" /> View site
+            <ExternalLink className="h-4 w-4" /> View site
           </NavLink>
           <Button
             type="button"
             variant="outline"
-            className="w-full justify-start rounded-none"
+            className="h-11 w-full justify-start rounded-none font-sans text-xs font-bold uppercase tracking-wide"
             onClick={signOut}
           >
-            <LogOut /> {admin ? admin.name : "Sign out"}
+            <LogOut className="h-4 w-4" /> {admin ? admin.name : "Sign out"}
           </Button>
         </div>
       </aside>
 
       {/* Compact header for phones/tablets: the same nav, scrollable. */}
       <header className="theme-dark sticky top-0 z-30 border-b border-border bg-black text-foreground lg:hidden">
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <img src={siteLogo} alt="Fragrant Nature Film Creations" className="h-auto w-32" />
+        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+          <img src={siteLogo} alt="Fragrant Nature Film Creations" className="h-auto w-40" />
           <div className="flex items-center gap-4">
             <NavLink
               to="/"
-              className="font-sans text-xs uppercase tracking-widest text-muted-foreground"
+              className="font-sans text-xs font-bold uppercase tracking-wide text-muted-foreground hover:text-foreground"
             >
               Site
             </NavLink>
             <button
               type="button"
               onClick={signOut}
-              className="font-sans text-xs uppercase tracking-widest text-muted-foreground"
+              className="font-sans text-xs font-bold uppercase tracking-wide text-muted-foreground hover:text-foreground"
             >
               Sign out
             </button>
           </div>
         </div>
-        <nav className="no-scrollbar flex gap-1 overflow-x-auto bg-black px-2 pb-2">
+        <nav className="no-scrollbar flex gap-1.5 overflow-x-auto bg-black px-3 pb-2.5">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `whitespace-nowrap border px-3 py-1.5 font-sans text-[11px] font-bold uppercase tracking-widest ${
+                `whitespace-nowrap border px-3.5 py-2 font-sans text-xs font-bold uppercase tracking-wide ${
                   isActive
                     ? "border-white bg-white text-black"
                     : "border-border text-muted-foreground"
@@ -124,7 +124,7 @@ function AdminShell() {
         </nav>
       </header>
 
-      <main className="px-5 py-8 lg:pr-10 lg:pl-[17rem]">
+      <main className="px-5 py-8 lg:pr-10 lg:pl-[20rem]">
         <div className="mx-auto max-w-6xl">
           <Routes>
             <Route index element={<DashboardSection />} />

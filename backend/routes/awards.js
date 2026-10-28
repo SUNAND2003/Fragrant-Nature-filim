@@ -20,7 +20,7 @@ const createSchema = z.object(awardFields);
 const updateSchema = createSchema.partial();
 
 router.get("/", async (req, res) => {
-  const awards = await Award.find().sort({ year: -1 });
+  const awards = await Award.find().sort({ createdAt: -1, _id: -1 });
   return res.json(awards);
 });
 

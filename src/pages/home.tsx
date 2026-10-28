@@ -13,7 +13,7 @@ import type { Award, Film } from "@/lib/films";
 import { useAwards, useContent, useFilmLookup, useFilms } from "@/lib/content";
 import { useLikes } from "@/lib/likes";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { FilmCard, PlayButton, Reveal, TrailerModal } from "@/components/site";
+import { FilmCard, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
 
 const SLIDE_DURATION = 7000;
 
@@ -198,6 +198,7 @@ function HeroCarousel() {
               className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
             >
               <PlayButton onClick={() => setTrailer(true)} color={film.accent} />
+              <ScreenRequestButton film={film} color={film.accent} />
               <button
                 type="button"
                 onClick={() => toggleLike(film.slug)}

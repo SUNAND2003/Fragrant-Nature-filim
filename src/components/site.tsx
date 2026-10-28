@@ -955,7 +955,7 @@ export function PlayButton({
     <button
       onClick={onClick}
       style={color ? ({ "--play-accent": color } as CSSProperties) : undefined}
-      className="group inline-flex items-center gap-4 font-mono text-xs uppercase tracking-[0.25em] text-foreground"
+      className="group inline-flex items-center gap-4 font-mono text-xs uppercase tracking-[0.25em] text-foreground cursor-pointer"
     >
       <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-foreground/70 transition-all duration-500 group-hover:scale-110 group-hover:border-[var(--play-accent,var(--neon))] group-hover:bg-[var(--play-accent,var(--neon))] group-hover:text-primary-foreground">
         <span className="absolute inset-0 animate-ping rounded-full border border-[var(--play-accent,var(--neon-ink))] opacity-40" />
@@ -965,5 +965,339 @@ export function PlayButton({
         {label}
       </span>
     </button>
+  );
+}
+
+export function ScreenRequestModal({
+  film,
+  open,
+  onClose,
+}: {
+  film: Film;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [organization, setOrganization] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [date, setDate] = useState("");
+  const [screeningType, setScreeningType] = useState("Theatrical / Cinema Booking");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setSubmitted(false);
+      setSubmitting(false);
+    }
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [open, onClose]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !organization.trim()) return;
+    setSubmitting(true);
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+    }, 600);
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md overflow-y-auto"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 16 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Screen Request — ${film.title}`}
+            className="relative my-8 w-full max-w-xl overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0d] p-6 text-white shadow-2xl sm:p-8"
+          >
+            {/* Ambient subtle glow */}
+            <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-neon/10 blur-3xl" />
+
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
+                  Theatrical & Festival Bureau
+                </span>
+                <h3 className="mt-1 font-display text-2xl uppercase tracking-wide text-white sm:text-3xl">
+                  Screen Request
+                </h3>
+                <p className="mt-1 font-sans text-xs text-white/70">
+                  Request a theatrical DCP, 35mm print, or festival screener for{" "}
+                  <strong className="text-white font-bold">{film.title}</strong> ({film.year}).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full border border-white/20 p-2 text-white/60 transition-colors hover:border-white hover:text-white cursor-pointer"
+                aria-label="Close dialog"
+              >
+                ✕
+              </button>
+            </div>
+
+            {submitted ? (
+              <div className="py-8 text-center space-y-4">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-neon/15 border border-neon/30 text-neon text-2xl font-bold">
+                  ✓
+                </div>
+                <h4 className="font-display text-2xl uppercase tracking-wide text-white">
+                  Request Dispatched
+                </h4>
+                <p className="mx-auto max-w-md font-sans text-xs text-white/70 leading-relaxed">
+                  Thank you, <strong>{name}</strong>. Your screening request for{" "}
+                  <strong>{film.title}</strong> at <strong>{organization}</strong> has been logged with our theatrical sales bureau. We will review print availability and reach out to <strong>{email}</strong>.
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-none border border-white bg-white px-6 py-2.5 font-sans text-xs font-bold uppercase tracking-wider text-black transition-transform hover:scale-105 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Your Name *
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Jordan Hayes"
+                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Venue / Theater / Festival *
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      value={organization}
+                      onChange={(e) => setOrganization(e.target.value)}
+                      placeholder="e.g. Metrograph Cinema"
+                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Email Address *
+                    </label>
+                    <input
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="programmer@venue.com"
+                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1 (555) 0123"
+                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      City / Location
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. New York, NY"
+                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Target Date / Window
+                    </label>
+                    <input
+                      type="text"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      placeholder="e.g. November 2026"
+                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                    Screening Type
+                  </label>
+                  <select
+                    value={screeningType}
+                    onChange={(e) => setScreeningType(e.target.value)}
+                    className="h-10 w-full border border-white/15 bg-[#141418] px-3 font-sans text-xs text-white focus:border-neon focus:outline-none cursor-pointer"
+                  >
+                    <option value="Theatrical / Cinema Booking">Theatrical / Cinema Booking (DCP)</option>
+                    <option value="Film Festival Screening">Film Festival Official Selection</option>
+                    <option value="Repertory 35mm Print">Repertory 35mm Archival Print</option>
+                    <option value="College / University Screening">College / University / Museum</option>
+                    <option value="Press / Buyer Digital Screener">Press / Buyer Digital Screener</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Seating capacity, number of screenings, format preferences..."
+                    className="w-full border border-white/15 bg-white/5 p-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
+                  <Link
+                    to="/contact"
+                    onClick={onClose}
+                    className="font-sans text-xs text-white/60 hover:text-white underline"
+                  >
+                    Full Contact & Bureaus →
+                  </Link>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="border border-white/20 px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-white hover:border-white cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="border border-neon bg-neon px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-black transition-transform hover:scale-105 disabled:opacity-50 cursor-pointer"
+                    >
+                      {submitting ? "Sending…" : "Submit Request"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export function ScreenRequestButton({
+  onClick,
+  color,
+  film,
+}: {
+  onClick?: () => void;
+  color?: string;
+  film?: Film | null;
+}) {
+  const [open, setOpen] = useState(false);
+  // Only hide if the film explicitly disables screen requests (screenRequest === false)
+  if (film?.screenRequest === false) return null;
+
+  const targetFilm: Film = film ?? {
+    title: "Fragrant Nature Slate",
+    slug: "slate",
+    director: "Fragrant Nature Studio",
+    year: new Date().getFullYear(),
+    genre: "Theatrical Selection",
+    runtime: "",
+    rating: "",
+    poster: "",
+    tagline: "Stories Worth The Dark",
+    synopsis: "Theatrical, archival 35mm, and festival screening booking request.",
+    cast: [],
+    status: "now",
+    release: "Current Slate",
+    laurels: [],
+    accent: color || "#7CFF3D",
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onClick ?? (() => setOpen(true))}
+        style={color ? ({ "--screen-accent": color } as CSSProperties) : undefined}
+        className="group inline-flex items-center gap-4 font-mono text-xs uppercase tracking-[0.25em] text-foreground cursor-pointer"
+        title={`Request a screening for ${targetFilm.title}`}
+      >
+        <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-foreground/70 transition-all duration-500 group-hover:scale-110 group-hover:border-[var(--screen-accent,var(--neon))] group-hover:bg-[var(--screen-accent,var(--neon))] group-hover:text-primary-foreground">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+          >
+            <rect width="18" height="12" x="3" y="4" rx="2" />
+            <line x1="2" x2="22" y1="20" y2="20" />
+            <line x1="8" x2="8" y1="16" />
+            <line x1="16" x2="16" y1="20" />
+          </svg>
+        </span>
+        <span className="transition-colors group-hover:text-[color:var(--screen-accent,var(--neon-ink))]">
+          Screen Request
+        </span>
+      </button>
+
+      {!onClick && (
+        <ScreenRequestModal
+          film={targetFilm}
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }

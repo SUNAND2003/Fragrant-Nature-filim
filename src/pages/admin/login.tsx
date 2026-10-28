@@ -70,7 +70,7 @@ export function AdminLoginPage() {
   };
 
   return (
-    <div className="theme-dark relative min-h-screen w-full overflow-hidden bg-[#070709] text-white font-sans antialiased selection:bg-neon selection:text-black flex flex-col justify-between p-4 sm:p-6 md:p-8">
+    <div className="admin-shell theme-dark relative min-h-screen w-full overflow-hidden bg-[#070709] text-white font-sans antialiased selection:bg-neon selection:text-black flex flex-col justify-between p-4 sm:p-6 md:p-8">
       {/* ================= ANIMATED CINEMATIC BACKGROUND EFFECTS ================= */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         {/* Animated Floating Neon Orb 1 */}

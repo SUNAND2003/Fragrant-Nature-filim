@@ -1,8 +1,16 @@
 import { Link } from "react-router";
-import { AnimatePresence, motion, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-import { awardsList, films, getFilm, news, type Film } from "@/lib/films";
+import type { Award, Film } from "@/lib/films";
+import { useAwards, useContent, useFilmLookup, useFilms } from "@/lib/content";
 import { useLikes } from "@/lib/likes";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { FilmCard, PlayButton, Reveal, TrailerModal } from "@/components/site";
@@ -10,11 +18,16 @@ import { FilmCard, PlayButton, Reveal, TrailerModal } from "@/components/site";
 const SLIDE_DURATION = 7000;
 
 function HeroCarousel() {
+  const films = useFilms();
+  // The hero rotates the films the admin marked as featured (static
+  // catalogue: every film qualifies).
+  const featured = films.filter((f) => f.featured ?? true);
+  const slides = featured.length ? featured : films;
   const [index, setIndex] = useState(0);
   const [nav, setNav] = useState(0);
   const [progress, setProgress] = useState(0);
   const [trailer, setTrailer] = useState(false);
-  const film = films[index]!;
+  const film = slides[Math.min(index, Math.max(slides.length - 1, 0))]!;
   const { likes, toggle: toggleLike } = useLikes();
   const liked = likes.includes(film.slug);
 
@@ -32,7 +45,7 @@ function HeroCarousel() {
   // wrapping. Bumping `nav` remounts the autoplay effect, so the timer and
   // progress bar restart from zero on every manual change.
   const goTo = (i: number) => {
-    setIndex(((i % films.length) + films.length) % films.length);
+    setIndex(((i % slides.length) + slides.length) % slides.length);
     setNav((n) => n + 1);
   };
 
@@ -49,13 +62,13 @@ function HeroCarousel() {
     const id = window.setInterval(() => {
       const p = (Date.now() - started) / SLIDE_DURATION;
       if (p >= 1) {
-        setIndex((i) => (i + 1) % films.length);
+        setIndex((i) => (i + 1) % slides.length);
       } else {
         setProgress(p);
       }
     }, 50);
     return () => window.clearInterval(id);
-  }, [index, nav, trailer]);
+  }, [index, nav, trailer, slides.length]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
     if (!sectionRef.current) return;
@@ -70,7 +83,9 @@ function HeroCarousel() {
 
     const target = e.target as HTMLElement | null;
     const isInteractive = Boolean(
-      target?.closest("button, a, input, select, textarea, [role='dialog'], [data-interactive='true']")
+      target?.closest(
+        "button, a, input, select, textarea, [role='dialog'], [data-interactive='true']",
+      ),
     );
     setIsOverInteractive(isInteractive);
   };
@@ -94,7 +109,11 @@ function HeroCarousel() {
 
   const handleSectionClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement | null;
-    if (target?.closest("button, a, input, select, textarea, [role='dialog'], [data-interactive='true']")) {
+    if (
+      target?.closest(
+        "button, a, input, select, textarea, [role='dialog'], [data-interactive='true']",
+      )
+    ) {
       return;
     }
     if (!sectionRef.current) return;
@@ -154,7 +173,7 @@ function HeroCarousel() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="font-mono text-xs uppercase tracking-[0.3em] text-[color:var(--hero-accent)] transition-colors duration-700"
+              className="font-sans text-xs font-bold uppercase tracking-tight text-[color:var(--hero-accent)] transition-colors duration-700"
             >
               {film.status === "now" ? "Now in theaters" : "Coming soon"} — {film.laurels[0]}
             </motion.p>
@@ -203,7 +222,7 @@ function HeroCarousel() {
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </button>
-              <span className="font-mono text-xs uppercase tracking-[0.25em] text-white/75">
+              <span className="font-sans text-xs font-bold uppercase tracking-tight text-white/75">
                 {film.year} · {film.genre}
               </span>
             </motion.div>
@@ -213,7 +232,7 @@ function HeroCarousel() {
 
       <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center px-5 md:bottom-10">
         <div className="flex items-center gap-2.5">
-          {films.map((f, i) => (
+          {slides.map((f, i) => (
             <button
               key={f.slug}
               type="button"
@@ -292,6 +311,7 @@ function HeroCarousel() {
 /** NEON-style "Watch Now" strip — horizontally scrolling 16:9 stills with
  *  hover actions (like + trailer) and prev/next controls in the heading. */
 function WatchNow() {
+  const films = useFilms();
   const rowRef = useRef<HTMLDivElement>(null);
   const { likes, toggle } = useLikes();
   const [trailerFilm, setTrailerFilm] = useState<Film>(films[0] as Film);
@@ -340,7 +360,7 @@ function WatchNow() {
         </Reveal>
         <Link
           to="/films"
-          className="font-mono text-xs uppercase tracking-[0.25em] hover:text-neon-ink"
+          className="font-sans text-xs font-bold uppercase tracking-tight hover:underline hover:text-neon-ink"
         >
           All movies →
         </Link>
@@ -434,11 +454,11 @@ function WatchNow() {
                 </svg>
                 <Link
                   to={`/films/${f.slug}`}
-                  className="font-mono text-[11px] uppercase tracking-[0.25em] transition-transform duration-300 group-hover:translate-x-1"
+                  className="font-sans text-sm font-bold uppercase tracking-tight transition-transform duration-300 group-hover:translate-x-1 hover:text-neon-ink"
                 >
                   {f.title}
                 </Link>
-                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="ml-auto font-sans text-xs font-semibold uppercase tracking-tight text-muted-foreground">
                   {f.year}
                 </span>
               </div>
@@ -468,8 +488,24 @@ function CannesLaurelIcon({ className = "h-5 w-auto shrink-0" }: { className?: s
         strokeWidth="1.2"
         strokeLinecap="round"
       />
-      <ellipse cx="19" cy="11" rx="4.8" ry="8.5" fill="none" stroke="currentColor" strokeWidth="1" />
-      <line x1="19" y1="4.5" x2="19" y2="17.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+      <ellipse
+        cx="19"
+        cy="11"
+        rx="4.8"
+        ry="8.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+      />
+      <line
+        x1="19"
+        y1="4.5"
+        x2="19"
+        y2="17.5"
+        stroke="currentColor"
+        strokeWidth="0.9"
+        strokeLinecap="round"
+      />
       <path
         d="M16.5 7.5c1.2.6 2.5 1 2.5 1M21.5 7.5c-1.2.6-2.5 1-2.5 1M16 10.5c1.5.6 3 1 3 1M22 10.5c-1.5.6-3 1-3 1M16.5 13.5c1.2.5 2.5.8 2.5.8M21.5 13.5c-1.2.5-2.5.8-2.5.8"
         stroke="currentColor"
@@ -483,12 +519,7 @@ function CannesLaurelIcon({ className = "h-5 w-auto shrink-0" }: { className?: s
 /** Academy Award / Oscar Statuette silhouette matching NEON */
 function OscarStatueIcon({ className = "h-5 w-auto shrink-0" }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 14 26"
-      fill="currentColor"
-      className={className}
-      aria-label="Academy Award"
-    >
+    <svg viewBox="0 0 14 26" fill="currentColor" className={className} aria-label="Academy Award">
       <circle cx="7" cy="3" r="1.9" />
       <path d="M5.1 6.2h3.8c.7 0 1.2.5 1.2 1.2v5.2c0 .4-.2.8-.5 1.1L8.2 19.5H5.8L4.4 13.7c-.3-.3-.5-.7-.5-1.1V7.4c0-.7.5-1.2 1.2-1.2z" />
       <line x1="7" y1="7.8" x2="7" y2="15.5" stroke="currentColor" strokeWidth="0.75" />
@@ -499,7 +530,13 @@ function OscarStatueIcon({ className = "h-5 w-auto shrink-0" }: { className?: st
 }
 
 /** Festival laurel wreath matching NEON */
-function FestivalWreathIcon({ className = "h-5 w-auto shrink-0", title = "Festival Winner" }: { className?: string; title?: string }) {
+function FestivalWreathIcon({
+  className = "h-5 w-auto shrink-0",
+  title = "Festival Winner",
+}: {
+  className?: string;
+  title?: string;
+}) {
   return (
     <svg
       viewBox="0 0 34 22"
@@ -513,7 +550,15 @@ function FestivalWreathIcon({ className = "h-5 w-auto shrink-0", title = "Festiv
         d="M4 17.5C1.8 14.5.8 10.5 2 6c1.2 2.6 2.8 4.6 4.8 5.6C4.8 8 5 4.5 6.8 1.8c1.4 2.4 3 4.2 4.4 5.5M30 17.5c2.2-3 3.2-7 2-11.5-1.2 2.6-2.8 4.6-4.8 5.6 2-3.6 1.8-7.1 0-9.8-1.4 2.4-3 4.2-4.4 5.5"
         strokeLinecap="round"
       />
-      <circle cx="17" cy="11" r="3.2" fill="currentColor" fillOpacity={0.25} stroke="currentColor" strokeWidth={1} />
+      <circle
+        cx="17"
+        cy="11"
+        r="3.2"
+        fill="currentColor"
+        fillOpacity={0.25}
+        stroke="currentColor"
+        strokeWidth={1}
+      />
       <path d="M17 8.5v5M14.5 11h5" stroke="currentColor" strokeWidth={1} strokeLinecap="round" />
     </svg>
   );
@@ -522,6 +567,8 @@ function FestivalWreathIcon({ className = "h-5 w-auto shrink-0", title = "Festiv
 /** Award Winners section matching the exact design of neonrated.com */
 function AwardWinners() {
   const rowRef = useRef<HTMLDivElement>(null);
+  const getFilm = useFilmLookup();
+  const awardsList = useAwards();
   const [trailerFilm, setTrailerFilm] = useState<Film | null>(null);
   const { likes, toggle: toggleLike } = useLikes();
 
@@ -534,62 +581,26 @@ function AwardWinners() {
     });
   };
 
-  const awardFilms = [
-    {
-      film: getFilm("red-highway")!,
+  // Straight from the awards collection — the rail shows whichever honors the
+  // admin has on file, paired with the film each honor belongs to.
+  const awardFilms = awardsList
+    .map((award) => ({ award, film: getFilm(award.filmSlug) }))
+    .filter((entry): entry is { award: Award; film: Film } => Boolean(entry.film))
+    .slice(0, 8)
+    .map(({ award, film }) => ({
+      award,
+      film,
       icons: (
         <>
-          <CannesLaurelIcon className="h-4.5 w-auto" />
+          {award.category === "Major Prize" ? (
+            <CannesLaurelIcon className="h-4.5 w-auto" />
+          ) : (
+            <FestivalWreathIcon title={award.award} className="h-4.5 w-auto" />
+          )}
           <OscarStatueIcon className="h-5 w-auto" />
         </>
       ),
-    },
-    {
-      film: getFilm("drown")!,
-      icons: (
-        <>
-          <FestivalWreathIcon title="Sundance Grand Jury Prize" className="h-4.5 w-auto" />
-          <OscarStatueIcon className="h-5 w-auto" />
-        </>
-      ),
-    },
-    {
-      film: getFilm("blue-hour")!,
-      icons: (
-        <>
-          <FestivalWreathIcon title="Venice Silver Lion" className="h-4.5 w-auto" />
-          <OscarStatueIcon className="h-5 w-auto" />
-        </>
-      ),
-    },
-    {
-      film: getFilm("blood-moon-farm")!,
-      icons: (
-        <>
-          <FestivalWreathIcon title="Fantastic Fest Audience Award" className="h-4.5 w-auto" />
-          <OscarStatueIcon className="h-5 w-auto" />
-        </>
-      ),
-    },
-    {
-      film: getFilm("afterbloom")!,
-      icons: (
-        <>
-          <CannesLaurelIcon className="h-4.5 w-auto" />
-          <FestivalWreathIcon title="Berlinale Selection" className="h-4.5 w-auto" />
-        </>
-      ),
-    },
-    {
-      film: getFilm("rooftop-summer")!,
-      icons: (
-        <>
-          <FestivalWreathIcon title="SXSW Spotlight" className="h-4.5 w-auto" />
-          <FestivalWreathIcon title="Official Selection" className="h-4.5 w-auto" />
-        </>
-      ),
-    },
-  ].filter((item) => Boolean(item.film));
+    }));
 
   return (
     <section className="border-b border-border">
@@ -626,7 +637,7 @@ function AwardWinners() {
 
         <Link
           to="/awards"
-          className="font-mono text-xs uppercase tracking-[0.25em] hover:text-neon-ink"
+          className="font-sans text-xs font-bold uppercase tracking-tight hover:underline hover:text-neon-ink"
         >
           All honors →
         </Link>
@@ -636,11 +647,11 @@ function AwardWinners() {
         ref={rowRef}
         className="no-scrollbar flex snap-x gap-5 overflow-x-auto scroll-pl-5 px-5 pb-20 md:scroll-pl-10 md:px-10"
       >
-        {awardFilms.map(({ film: f, icons }) => {
+        {awardFilms.map(({ award, film: f, icons }, index) => {
           const liked = likes.includes(f.slug);
           return (
             <div
-              key={f.slug}
+              key={`${f.slug}-${award.id ?? index}`}
               className="group w-[75vw] shrink-0 snap-start sm:w-[320px] md:w-[350px] lg:w-[380px]"
             >
               <div className="relative aspect-video overflow-hidden rounded-2xl bg-card">
@@ -700,24 +711,27 @@ function AwardWinners() {
               <div className="mt-3 flex items-center justify-between gap-3 px-0.5">
                 <Link
                   to={`/films/${f.slug}`}
-                  className="font-display text-base uppercase tracking-wider transition-colors group-hover:text-neon-ink md:text-lg"
+                  className="font-sans text-sm font-bold uppercase tracking-tight transition-colors group-hover:text-neon-ink md:text-base"
                 >
                   {f.title}
                 </Link>
-                <div className="flex shrink-0 items-center gap-2 text-foreground/85 transition-colors group-hover:text-foreground">
+                <span className="flex shrink-0 items-center gap-1.5 text-neon-ink" aria-hidden>
                   {icons}
-                </div>
+                </span>
               </div>
             </div>
           );
         })}
       </div>
 
-      <TrailerModal
-        film={trailerFilm}
-        open={Boolean(trailerFilm)}
-        onClose={() => setTrailerFilm(null)}
-      />
+      {/* Kept mounted while a winner exists so the modal's exit animation runs. */}
+      {awardFilms[0] && (
+        <TrailerModal
+          film={trailerFilm ?? awardFilms[0].film}
+          open={Boolean(trailerFilm)}
+          onClose={() => setTrailerFilm(null)}
+        />
+      )}
     </section>
   );
 }
@@ -729,7 +743,8 @@ export function HomePage() {
       "Fragrant Nature is an independent film studio releasing bold, award-winning cinema.",
   });
 
-  const [, f1, f2, f3] = films as [Film, Film, Film, Film, ...Film[]];
+  const { films, news } = useContent();
+  const [f1, f2, f3] = films.filter((f) => f.status === "now");
   const [active, setActive] = useState(0);
 
   return (
@@ -748,26 +763,30 @@ export function HomePage() {
             </Reveal>
             <Link
               to="/films"
-              className="font-mono text-xs uppercase tracking-[0.25em] hover:text-neon-ink"
+              className="font-sans text-xs font-bold uppercase tracking-tight hover:underline hover:text-neon-ink"
             >
               All movies →
             </Link>
           </div>
           <div className="grid gap-5 md:grid-cols-12">
-            <div className="md:col-span-7">
-              <FilmCard film={f1} index={0} tall aspect="aspect-[4/3]" />
-            </div>
-            <div className="grid gap-5 md:col-span-5">
-              <FilmCard film={f2} index={1} aspect="aspect-[2/1]" />
-              <FilmCard film={f3} index={2} aspect="aspect-[2/1]" />
-            </div>
+            {f1 && (
+              <div className="md:col-span-7">
+                <FilmCard film={f1} index={0} tall aspect="aspect-[4/3]" />
+              </div>
+            )}
+            {(f2 || f3) && (
+              <div className="grid gap-5 md:col-span-5">
+                {f2 && <FilmCard film={f2} index={1} aspect="aspect-[2/1]" />}
+                {f3 && <FilmCard film={f3} index={2} aspect="aspect-[2/1]" />}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       <section className="theme-dark border-y border-border bg-background py-24 text-foreground">
         <div className="mx-auto max-w-[1600px] px-5 md:px-10">
-          <p className="mb-8 font-mono text-xs uppercase tracking-[0.3em] text-accent">
+          <p className="mb-8 font-sans text-xs font-bold uppercase tracking-tight text-accent">
             Coming soon
           </p>
           <div className="grid gap-10 md:grid-cols-2">
@@ -786,7 +805,7 @@ export function HomePage() {
                     >
                       {f.title}
                     </span>
-                    <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                    <span className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
                       {f.release}
                     </span>
                   </Link>
@@ -830,7 +849,7 @@ export function HomePage() {
             ].map(([n, l], i) => (
               <Reveal key={l} delay={i * 0.08} className="bg-background p-8">
                 <p className="font-display text-6xl text-neon-ink">{n}</p>
-                <p className="mt-2 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <p className="mt-2 font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
                   {l}
                 </p>
               </Reveal>
@@ -846,7 +865,7 @@ export function HomePage() {
           <h2 className="font-display text-5xl">Dispatch</h2>
           <Link
             to="/news"
-            className="font-mono text-xs uppercase tracking-[0.25em] hover:text-neon-ink"
+            className="font-sans text-xs font-bold uppercase tracking-tight hover:underline hover:text-neon-ink"
           >
             All news →
           </Link>
@@ -854,7 +873,7 @@ export function HomePage() {
         <div className="grid gap-6 md:grid-cols-3">
           {news.slice(0, 3).map((n, i) => (
             <Reveal key={n.id} delay={i * 0.1}>
-              <Link to={`/news#news-${n.id}`} className="group block">
+              <Link to={`/news/${n.id}`} className="group block">
                 <div className="aspect-video overflow-hidden rounded-2xl">
                   <img
                     src={n.image}
@@ -863,7 +882,7 @@ export function HomePage() {
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
-                <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.25em] text-neon-ink">
+                <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">
                   {n.tag} — {n.date}
                 </p>
                 <h3 className="mt-2 text-2xl font-bold group-hover:underline">{n.title}</h3>

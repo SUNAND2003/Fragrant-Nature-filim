@@ -1,7 +1,8 @@
 import { Link } from "react-router";
 import { useState } from "react";
 
-import { films, type Film } from "@/lib/films";
+import { useFilms } from "@/lib/content";
+import type { Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { PageTitle, PlayButton, Reveal, TrailerModal } from "@/components/site";
 
@@ -11,6 +12,7 @@ export function UpcomingPage() {
     description: "The Fragrant Nature release slate: upcoming movies and trailers.",
   });
 
+  const films = useFilms();
   const [film, setFilm] = useState<Film | null>(null);
   const list = films.filter((f) => f.status === "upcoming");
   return (
@@ -30,13 +32,13 @@ export function UpcomingPage() {
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
                 />
-                <div className="absolute left-4 top-4 bg-neon px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-primary-foreground">
+                <div className="absolute left-4 top-4 rounded-full bg-neon-ink px-3.5 py-1.5 font-sans text-[11px] font-bold uppercase tracking-tight text-white shadow-lg">
                   {f.release}
                 </div>
               </div>
             </Reveal>
             <Reveal delay={0.15}>
-              <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+              <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
                 {f.genre} — Dir. {f.director}
               </p>
               <h2 className="mt-4 font-display text-4xl md:text-5xl">{f.title}</h2>
@@ -45,7 +47,7 @@ export function UpcomingPage() {
                 <PlayButton onClick={() => setFilm(f)} label="Teaser" />
                 <Link
                   to={`/films/${f.slug}`}
-                  className="font-mono text-xs uppercase tracking-[0.25em] underline-offset-8 hover:text-neon-ink hover:underline"
+                  className="font-sans text-xs font-bold uppercase tracking-tight text-foreground underline-offset-8 transition-colors hover:text-neon-ink hover:underline"
                 >
                   Details →
                 </Link>

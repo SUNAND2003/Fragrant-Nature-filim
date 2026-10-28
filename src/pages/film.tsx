@@ -2,7 +2,7 @@ import { Link, useParams } from "react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
-import { films, getFilm } from "@/lib/films";
+import { useFilmBySlug, useFilms } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { FilmCard, PlayButton, Reveal, TrailerModal } from "@/components/site";
 
@@ -10,7 +10,10 @@ function FilmNotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6">
       <p className="font-display text-6xl">Cut!</p>
-      <Link to="/films" className="font-mono text-xs uppercase tracking-widest text-neon-ink">
+      <Link
+        to="/films"
+        className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink"
+      >
         Back to movies
       </Link>
     </div>
@@ -19,7 +22,8 @@ function FilmNotFound() {
 
 export function FilmPage() {
   const { slug } = useParams();
-  const film = getFilm(slug ?? "");
+  const film = useFilmBySlug(slug);
+  const films = useFilms();
   const [open, setOpen] = useState(false);
 
   usePageMeta(
@@ -47,10 +51,31 @@ export function FilmPage() {
         />
         <div className="absolute inset-0 scrim-b" />
         <div className="relative flex h-full flex-col justify-end px-5 pb-14 md:px-10">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-neon">
+          <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
             {film.genre} · {film.year} · {film.runtime} · {film.rating}
           </p>
-          <h1 className="mt-4 overflow-hidden font-display text-[16vw] text-white md:text-[10vw]">
+          {(film.category || (film.subcategories?.length ?? 0) > 0) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {film.category && (
+                <Link
+                  to={`/films?category=${encodeURIComponent(film.category.slug)}`}
+                  className="rounded-full border border-white/40 px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-widest text-white/85 backdrop-blur transition-colors hover:border-neon hover:text-neon"
+                >
+                  {film.category.name}
+                </Link>
+              )}
+              {film.subcategories?.map((sub) => (
+                <Link
+                  key={sub._id}
+                  to={`/films?subcategory=${encodeURIComponent(sub.slug)}`}
+                  className="rounded-full border border-white/25 px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-widest text-white/70 backdrop-blur transition-colors hover:border-neon hover:text-neon"
+                >
+                  {sub.name}
+                </Link>
+              ))}
+            </div>
+          )}
+          <h1 className="mt-4 overflow-hidden font-display text-[clamp(2.8rem,14vw,8rem)] text-white md:text-[clamp(4.5rem,10vw,10.5rem)] leading-[0.84]">
             <motion.span
               className="block"
               initial={{ y: "100%" }}
@@ -63,7 +88,7 @@ export function FilmPage() {
           <p className="mt-2 text-xl italic text-white/75 md:text-2xl">"{film.tagline}"</p>
           <div className="mt-8 flex flex-wrap items-center gap-8">
             <PlayButton onClick={() => setOpen(true)} />
-            <span className="border border-neon px-6 py-4 font-mono text-xs uppercase tracking-[0.25em] text-neon">
+            <span className="rounded-full border border-neon-ink/50 bg-black/40 px-6 py-3 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink backdrop-blur">
               {film.release}
             </span>
           </div>
@@ -73,7 +98,9 @@ export function FilmPage() {
 
       <section className="mx-auto grid max-w-[1600px] gap-16 px-5 py-24 md:grid-cols-12 md:px-10">
         <Reveal className="md:col-span-7">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">Synopsis</p>
+          <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
+            Synopsis
+          </p>
           <p className="mt-6 text-3xl leading-snug md:text-5xl">{film.synopsis}</p>
         </Reveal>
         <Reveal delay={0.1} className="space-y-8 md:col-span-4 md:col-start-9">
@@ -84,7 +111,7 @@ export function FilmPage() {
             ["Rated", film.rating],
           ].map(([k, v]) => (
             <div key={k} className="border-b border-border pb-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+              <p className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
                 {k}
               </p>
               <p className="mt-1 text-xl font-semibold">{v}</p>
@@ -94,7 +121,7 @@ export function FilmPage() {
             {film.laurels.map((l) => (
               <span
                 key={l}
-                className="border border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest"
+                className="rounded-full border border-border px-3.5 py-1.5 font-sans text-[11px] font-bold uppercase tracking-tight text-muted-foreground"
               >
                 ✦ {l}
               </span>

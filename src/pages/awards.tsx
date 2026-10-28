@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 
-import { awardsList, getFilm, type Award, type Film } from "@/lib/films";
+import { useAwards, useFilmLookup } from "@/lib/content";
+import type { Award, Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { PageTitle, PlayButton, Reveal, TrailerModal } from "@/components/site";
 
@@ -74,7 +75,7 @@ function StatBlock({ stat, index }: { stat: (typeof stats)[number]; index: numbe
   return (
     <div ref={ref} className="bg-background p-6 sm:p-8">
       <p className="font-display text-5xl text-neon-ink sm:text-7xl">{shown}</p>
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:text-xs">
+      <p className="mt-2 font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
         {stat.label}
       </p>
     </div>
@@ -114,6 +115,8 @@ function FeaturedHonor({
   rank: number;
   onTrailer: (film: Film) => void;
 }) {
+  const getFilm = useFilmLookup();
+  const awardsList = useAwards();
   const film = getFilm(item.filmSlug);
   const tone = categoryTone[item.category];
 
@@ -138,11 +141,11 @@ function FeaturedHonor({
           )}
           <div className="absolute inset-0 scrim-b opacity-90" />
           <span
-            className={`absolute left-5 top-5 rounded-full px-3 py-1 font-mono text-[9px] uppercase tracking-[0.2em] ${tone.chip}`}
+            className={`absolute left-5 top-5 rounded-full px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-tight ${tone.chip}`}
           >
             {item.category}
           </span>
-          <span className="absolute right-5 top-5 font-mono text-[10px] uppercase tracking-[0.25em] text-white/75">
+          <span className="absolute right-5 top-5 font-sans text-xs font-bold uppercase tracking-tight text-white/75">
             {String(rank).padStart(2, "0")} / {awardsList.length}
           </span>
         </div>
@@ -151,14 +154,14 @@ function FeaturedHonor({
         <div className="flex flex-col justify-center gap-5 p-6 md:p-10">
           <div className="flex items-center gap-4">
             <LaurelWreath className="h-10 w-10 shrink-0 text-neon-ink transition-transform duration-500 group-hover:scale-110" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon-ink">
+            <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
               {item.festival}
               <span className="text-muted-foreground"> · {item.year}</span>
             </p>
           </div>
 
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+            <p className="font-sans text-[11px] font-bold uppercase tracking-tight text-muted-foreground">
               Headline honor
             </p>
             <h2 className="mt-2 font-display text-4xl md:text-5xl lg:text-6xl">{item.award}</h2>
@@ -174,7 +177,7 @@ function FeaturedHonor({
                 <PlayButton onClick={() => onTrailer(film)} label="Trailer" color={film.accent} />
                 <Link
                   to={`/films/${film.slug}`}
-                  className="font-mono text-xs uppercase tracking-[0.25em] underline-offset-8 hover:text-neon-ink hover:underline"
+                  className="font-sans text-xs font-bold uppercase tracking-tight underline-offset-8 hover:text-neon-ink hover:underline"
                 >
                   {film.title} →
                 </Link>
@@ -194,6 +197,8 @@ export function AwardsPage() {
       "Explore the festival acclaim, major awards, and global honors earned by Fragrant Nature film releases.",
   });
 
+  const awardsList = useAwards();
+  const getFilm = useFilmLookup();
   const [activeFilter, setActiveFilter] = useState<FilterCategory>("All");
   const [trailerFilm, setTrailerFilm] = useState<Film | null>(null);
 
@@ -248,7 +253,7 @@ export function AwardsPage() {
                     type="button"
                     onClick={() => setActiveFilter(cat)}
                     aria-pressed={active}
-                    className={`group relative rounded-full border px-5 py-2 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                    className={`group relative rounded-full border px-5 py-2 font-sans text-xs font-bold uppercase tracking-tight transition-colors duration-300 ${
                       active
                         ? "border-neon"
                         : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -275,7 +280,7 @@ export function AwardsPage() {
                 );
               })}
             </div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+            <p className="font-sans text-xs font-semibold uppercase tracking-tight text-muted-foreground">
               Showing {filteredAwards.length} of {awardsList.length} honors
             </p>
           </div>
@@ -323,15 +328,15 @@ export function AwardsPage() {
                     )}
                     <div className="absolute inset-0 scrim-b opacity-90" />
                     <span
-                      className={`absolute left-4 top-4 rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.2em] ${tone.chip}`}
+                      className={`absolute left-4 top-4 rounded-full px-2.5 py-1 font-sans text-[10px] font-bold uppercase tracking-tight ${tone.chip}`}
                     >
                       {item.category}
                     </span>
-                    <span className="absolute right-4 top-4 font-mono text-[10px] tracking-[0.2em] text-white/75">
+                    <span className="absolute right-4 top-4 font-sans text-[11px] font-bold uppercase tracking-tight text-white/75">
                       {String(rank).padStart(2, "0")}
                     </span>
                     <div className="absolute inset-x-4 bottom-4">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon">
+                      <p className="font-sans text-[11px] font-bold uppercase tracking-tight text-neon">
                         {item.festival}
                         <span className="text-white/60"> · {item.year}</span>
                       </p>
@@ -343,7 +348,7 @@ export function AwardsPage() {
 
                   {/* Citation + awarded film */}
                   <div className="flex flex-1 flex-col p-5 md:p-6">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                    <p className="font-sans text-[11px] font-bold uppercase tracking-tight text-muted-foreground">
                       Jury citation
                     </p>
                     <blockquote className="mt-2 flex gap-3 text-[15px] italic leading-relaxed text-foreground/85">
@@ -358,7 +363,7 @@ export function AwardsPage() {
 
                     <div className="mt-auto flex flex-wrap items-end justify-between gap-4 border-t border-border pt-4">
                       <div className="min-w-0">
-                        <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                        <p className="font-sans text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
                           Awarded film
                         </p>
                         {film && (
@@ -369,7 +374,7 @@ export function AwardsPage() {
                             >
                               {film.title}
                             </Link>
-                            <p className="truncate font-mono text-[10px] text-muted-foreground">
+                            <p className="truncate font-sans text-xs font-medium text-muted-foreground">
                               Dir. {film.director} · {film.year}
                             </p>
                           </>
@@ -380,7 +385,7 @@ export function AwardsPage() {
                           <button
                             type="button"
                             onClick={() => setTrailerFilm(film)}
-                            className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
+                            className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground transition-colors hover:text-foreground"
                           >
                             Trailer
                           </button>
@@ -388,7 +393,7 @@ export function AwardsPage() {
                         {film && (
                           <Link
                             to={`/films/${film.slug}`}
-                            className="font-mono text-[10px] uppercase tracking-[0.2em] text-neon-ink underline-offset-4 hover:underline"
+                            className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink underline-offset-4 hover:underline"
                           >
                             Explore →
                           </Link>

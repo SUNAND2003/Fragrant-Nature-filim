@@ -1,18 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router";
 
-import { films, type Film } from "@/lib/films";
+import type { Film } from "@/lib/films";
+import { useFilms, useGallery } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { PageTitle, Reveal } from "@/components/site";
 
 type Frame = { src: string; pos: string; ratio: string; no: string };
 
-type ShotSet = { film: Film; frames: Frame[] };
+type ShotFilm = Pick<Film, "title" | "slug" | "genre" | "year"> & { poster?: string };
 
-// Set photography for the gallery. Tiles are a uniform square so every frame
-// fills its grid cell edge-to-edge (no dead space in a row).
-const FRAME_RATIO = "aspect-square";
+type ShotSet = { film: ShotFilm; frames: Frame[] };
+
+// Set photography for the gallery. Tiles use a cinematic 16:10 landscape ratio
+// matching modern studio catalogs (like Neon), providing balanced height and generous spacing.
+const FRAME_RATIO = "aspect-[16/10]";
 
 // Stand-in set photos live in public/gallery/ (900×1200) and are served from
 // public, so they stay out of the JS bundle and are lazy-loaded on scroll.
@@ -25,18 +28,19 @@ const STOCK_PER_FILM = 7;
 const stock = (n: number) =>
   `${import.meta.env.BASE_URL}gallery/g${String(n).padStart(2, "0")}.jpg`;
 
-const sets: ShotSet[] = films.map((film, fi) => ({
-  film,
-  frames: [
-    { src: film.poster, pos: "object-center", ratio: FRAME_RATIO, no: "01" },
-    ...Array.from({ length: STOCK_PER_FILM }, (_, k) => ({
-      src: stock(fi * STOCK_PER_FILM + k + 1),
-      pos: "object-center",
-      ratio: FRAME_RATIO,
-      no: String(k + 2).padStart(2, "0"),
-    })),
-  ],
-}));
+const buildSets = (films: Film[]): ShotSet[] =>
+  films.map((film, fi) => ({
+    film,
+    frames: [
+      { src: film.poster, pos: "object-center", ratio: FRAME_RATIO, no: "01" },
+      ...Array.from({ length: STOCK_PER_FILM }, (_, k) => ({
+        src: stock(fi * STOCK_PER_FILM + k + 1),
+        pos: "object-center",
+        ratio: FRAME_RATIO,
+        no: String(k + 2).padStart(2, "0"),
+      })),
+    ],
+  }));
 
 export function GalleryPage() {
   usePageMeta({
@@ -44,6 +48,45 @@ export function GalleryPage() {
     description: "Photo sets from the Fragrant Nature slate, film by film.",
   });
 
+  const films = useFilms();
+  const gallery = useGallery();
+
+  const sets = useMemo<ShotSet[]>(() => {
+    if (gallery && gallery.length > 0) {
+      return gallery.map((item) => {
+        const matchedFilm = films.find(
+          (f) => f.slug === item.filmSlug || f.title.toLowerCase() === item.filmTitle.toLowerCase(),
+        );
+        const poster = item.poster || matchedFilm?.poster || "";
+        const frames: Frame[] = item.images.map((img, idx) => ({
+          src: img.url,
+          pos: "object-center",
+          ratio: FRAME_RATIO,
+          no: String(idx + 1).padStart(2, "0"),
+        }));
+
+        return {
+          film: {
+            title: item.filmTitle,
+            slug:
+              item.filmSlug ||
+              matchedFilm?.slug ||
+              item.filmTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            genre: item.genre || matchedFilm?.genre || "Cinema",
+            year: item.year || matchedFilm?.year || 2026,
+            poster,
+          },
+          frames:
+            frames.length > 0
+              ? frames
+              : poster
+                ? [{ src: poster, pos: "object-center", ratio: FRAME_RATIO, no: "01" }]
+                : [],
+        };
+      });
+    }
+    return buildSets(films);
+  }, [gallery, films]);
   const [open, setOpen] = useState<{ set: number; frame: number } | null>(null);
 
   // Lightbox: Escape closes, arrow keys move within the open film's set.
@@ -63,7 +106,7 @@ export function GalleryPage() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, sets]);
 
   const active = open ? sets[open.set]! : null;
   const frame = open && active ? active.frames[open.frame]! : null;
@@ -78,7 +121,7 @@ export function GalleryPage() {
             {/* Film heading */}
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
               <div>
-                <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+                <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
                   {s.film.genre} · {s.film.year}
                 </p>
                 <h2 className="mt-2 font-display text-4xl leading-none md:text-5xl">
@@ -86,12 +129,12 @@ export function GalleryPage() {
                 </h2>
               </div>
               <div className="flex items-center gap-6">
-                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
                   {pad(s.frames.length)} photos
                 </span>
                 <Link
                   to={`/films/${s.film.slug}`}
-                  className="font-mono text-xs uppercase tracking-[0.25em] underline-offset-8 hover:text-neon-ink hover:underline"
+                  className="font-sans text-xs font-bold uppercase tracking-tight text-foreground underline-offset-8 transition-colors hover:text-neon-ink hover:underline"
                 >
                   Details →
                 </Link>
@@ -99,7 +142,7 @@ export function GalleryPage() {
             </div>
 
             {/* That film's photo set — four tiles per row */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4">
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 md:gap-6 lg:gap-8 lg:gap-y-10">
               {s.frames.map((fr, fi) => (
                 <button
                   key={fr.no}
@@ -116,7 +159,7 @@ export function GalleryPage() {
                     className={`h-full w-full object-cover ${fr.pos} transition-transform duration-[1.2s] ease-out group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 scrim-b opacity-60 transition-opacity duration-500 group-hover:opacity-90" />
-                  <span className="absolute left-3 top-3 font-mono text-[10px] uppercase tracking-[0.25em] text-white/85">
+                  <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-tight text-white backdrop-blur">
                     {fr.no}
                   </span>
                 </button>
@@ -217,7 +260,7 @@ export function GalleryPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className={`relative h-[68vh] max-w-[92vw] overflow-hidden rounded-xl ${frame.ratio}`}
+              className={`relative max-h-[75vh] w-auto max-w-[82vw] overflow-hidden rounded-2xl sm:max-w-[88vw] md:max-w-4xl ${frame.ratio}`}
             >
               <img
                 src={frame.src}
@@ -228,7 +271,7 @@ export function GalleryPage() {
 
             <div className="text-center" onClick={(e) => e.stopPropagation()}>
               <p className="font-display text-2xl md:text-3xl">{active.film.title}</p>
-              <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.25em] text-neon-ink">
+              <p className="mt-1 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
                 {active.film.genre} — {frame.no} / {pad(active.frames.length)}
               </p>
             </div>

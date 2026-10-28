@@ -4,9 +4,51 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Girott";
+  src: url("/fonts/Girott-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Girott";
+  src: url("/fonts/Girott-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Focal";
+  src: url("/fonts/Focal-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Focal";
+  src: url("/fonts/Focal-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Focal";
+  src: url("/fonts/Focal-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme inline {
-  --font-display: "Anton", "Impact", sans-serif;
-  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-display: "Girott", "Barlow Condensed", "Anton", sans-serif;
+  --font-sans: "Focal", "Archivo", system-ui, -apple-system, sans-serif;
+  --font-girott: "Girott", "Barlow Condensed", sans-serif;
+  --font-focal: "Focal", "Archivo", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -73,12 +115,15 @@
   }
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
   body {
+    overflow-x: hidden;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
   ::selection {
     background: var(--neon);
@@ -100,8 +145,29 @@
 @utility font-display {
   font-family: var(--font-display);
   text-transform: uppercase;
-  letter-spacing: -0.01em;
-  line-height: 0.88;
+  letter-spacing: -0.035em;
+  line-height: 0.82;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1;
+}
+
+@utility type-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+@utility type-title {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
 }
 
 @utility text-outline {
@@ -129,7 +195,15 @@
   --ring: oklch(0.93 0.22 125);
   --neon: oklch(0.93 0.22 125);
   --neon-ink: oklch(0.93 0.22 125);
-  --neon-pink: oklch(0.65 0.27 350);
+}
+
+/* High-contrast theme for the studio admin panel: crisp dark/solid buttons,
+   sharp contrast, and high-legibility accents on light backgrounds. */
+.admin-shell {
+  --primary: oklch(0.18 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.2 0 0);
+  --neon-ink: oklch(0.35 0.15 140);
 }
 
 @utility grain {

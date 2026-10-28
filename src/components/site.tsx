@@ -1,18 +1,23 @@
 import { Link, useLocation } from "react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import logo from "@/assets/icon.png";
 import { useLikes } from "@/lib/likes";
-import { getFilm, type Film } from "@/lib/films";
+import type { Film } from "@/lib/films";
+import { useFilmLookup, useNavigation, useSettings } from "@/lib/content";
+import { buildNavItems, type MenuSubcategory, type NavMenuItem } from "@/lib/navigation";
 
-const nav = [
-  { to: "/films", label: "Movies" },
-  { to: "/upcoming", label: "Upcoming" },
-  { to: "/awards", label: "Awards" },
-  { to: "/gallery", label: "Gallery" },
-  { to: "/news", label: "News" },
-  { to: "/about", label: "About" },
-] as const;
+export type Subcategory = MenuSubcategory;
+export type NavItem = NavMenuItem;
+
+/**
+ * The public menu, live from the admin panel (`/admin/navigation`), with the
+ * About → News dropdown attached to whichever entry still points at /about.
+ */
+function useNav(): readonly NavItem[] {
+  const entries = useNavigation();
+  return useMemo(() => buildNavItems(entries), [entries]);
+}
 
 // Swap these URLs for the studio's real profile links.
 const socials = [
@@ -33,10 +38,23 @@ const socials = [
   },
 ] as const;
 
+/**
+ * Social links with hrefs taken from the admin's site settings (keys match the
+ * lowercased label: `youtube`, `instagram`, `facebook`). Placeholder values fall
+ * back to the defaults above.
+ */
+function useSocials() {
+  const settings = useSettings();
+  return socials.map((social) => {
+    const configured = settings[social.label.toLowerCase()];
+    return { ...social, href: configured && configured !== "#" ? configured : social.href };
+  });
+}
+
 /** Left-hand arrow that slides in when a menu item is hovered. */
 function MenuArrow() {
   return (
-    <span className="pointer-events-none absolute -left-8 top-1/2 -translate-x-3 -translate-y-1/2 text-neon-ink opacity-0 transition-all duration-300 group-hover/link:translate-x-0 group-hover/link:opacity-100 md:-left-14">
+    <span className="pointer-events-none absolute -left-8 top-1/2 -translate-x-3 -translate-y-1/2 text-neon-ink opacity-0 transition-all duration-300 group-hover/link:translate-x-0 group-hover/link:opacity-100 md:-left-12">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -54,6 +72,9 @@ function MenuArrow() {
 }
 
 export function SiteHeader() {
+  const getFilm = useFilmLookup();
+  const socialLinks = useSocials();
+  const nav = useNav();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   // Live like indicator: mirrors the shared likes store, so it fills and
@@ -63,18 +84,24 @@ export function SiteHeader() {
   const [likesOpen, setLikesOpen] = useState(false);
   const likedFilms = likes.map((slug) => getFilm(slug)).filter((f): f is Film => Boolean(f));
   const { pathname } = useLocation();
-  // The likes panel closes on Escape and whenever the route changes.
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+  // The likes panel and subnav dropdowns close on Escape and whenever the route changes.
   useEffect(() => {
     setLikesOpen(false);
-  }, [pathname]);
+    setOpenDropdowns({});
+  }, [pathname, open]);
   useEffect(() => {
-    if (!likesOpen) return;
+    const hasAnyDropdown = Object.values(openDropdowns).some(Boolean);
+    if (!likesOpen && !hasAnyDropdown) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLikesOpen(false);
+      if (e.key === "Escape") {
+        setLikesOpen(false);
+        setOpenDropdowns({});
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [likesOpen]);
+  }, [likesOpen, openDropdowns]);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 40);
     on();
@@ -88,7 +115,7 @@ export function SiteHeader() {
   const overHero = !scrolled && !open && (pathname === "/" || /^\/films\/[^/]+$/.test(pathname));
   return (
     <header
-      className={`theme-dark fixed inset-x-0 top-0 z-50 text-foreground transition-colors duration-500 ${overHero ? "bg-transparent" : "bg-black"}`}
+      className={`theme-dark fixed inset-x-0 top-0 z-50 text-foreground pt-[env(safe-area-inset-top)] transition-colors duration-500 ${overHero ? "bg-transparent" : "bg-black"}`}
     >
       <a
         href="#main"
@@ -96,7 +123,7 @@ export function SiteHeader() {
       >
         Skip to content
       </a>
-      <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center px-5 py-1.5 md:px-10 md:py-2">
+      <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center px-4 py-1.5 sm:px-5 md:px-10 md:py-2">
         <div className="col-start-1" aria-hidden />
         <Link
           to="/"
@@ -177,14 +204,14 @@ export function SiteHeader() {
               className="theme-dark absolute right-4 top-full z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-black shadow-2xl md:right-10"
             >
               <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-neon-ink">
+                <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
                   Liked {likedCount > 0 ? `· ${likedCount}` : ""}
                 </p>
                 {likedCount > 0 && (
                   <button
                     type="button"
                     onClick={clear}
-                    className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
+                    className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground transition-colors hover:text-foreground"
                   >
                     Clear all
                   </button>
@@ -218,7 +245,7 @@ export function SiteHeader() {
                         />
                         <span className="min-w-0">
                           <span className="block truncate font-display text-lg">{f.title}</span>
-                          <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                          <span className="block font-sans text-[11px] font-semibold uppercase tracking-tight text-muted-foreground">
                             {f.genre} · {f.year}
                           </span>
                         </span>
@@ -254,51 +281,124 @@ export function SiteHeader() {
             animate={{ clipPath: "inset(0 0 0% 0)" }}
             exit={{ clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
-            className="theme-dark absolute inset-x-0 top-full flex h-[100svh] flex-col items-center justify-center gap-4 overflow-x-hidden overflow-y-auto bg-black px-5 py-10 md:gap-7 md:px-10"
+            className="theme-dark absolute inset-x-0 top-full flex h-[calc(100dvh-100%)] flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-black px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:py-8"
           >
-            {nav.map((n, i) => (
-              <motion.div
-                key={n.to}
-                initial={{ y: 40, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 + i * 0.08 }}
-              >
-                <Link
-                  to={n.to}
-                  onClick={() => setOpen(false)}
-                  aria-current={pathname === n.to ? "page" : undefined}
-                  className="group/link relative block text-center font-display text-4xl md:text-6xl hover:text-neon-ink"
-                >
-                  <span className="inline-block transition-transform duration-300 ease-out group-hover/link:translate-x-3 md:group-hover/link:translate-x-5">
-                    {n.label}
-                  </span>
-                  <MenuArrow />
-                </Link>
-              </motion.div>
-            ))}
+            <div className="my-auto flex w-full max-w-2xl flex-col items-center justify-center gap-3 py-4 sm:gap-4 md:gap-5 md:py-6">
+              {nav.map((n, i) => {
+                const hasSub =
+                  "subcategories" in n && Boolean(n.subcategories && n.subcategories.length > 0);
+                return (
+                  <motion.div
+                    key={n.to}
+                    initial={{ y: 25, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.15 + i * 0.05 }}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <Link
+                        to={n.to}
+                        onClick={() => setOpen(false)}
+                        aria-current={pathname === n.to ? "page" : undefined}
+                        className="group/link relative block text-center font-display text-3xl tracking-wider hover:text-neon-ink sm:text-4xl md:text-5xl lg:text-6xl md:tracking-[0.06em]"
+                      >
+                        <span className="inline-block transition-transform duration-300 ease-out group-hover/link:translate-x-2.5 md:group-hover/link:translate-x-4">
+                          {n.label}
+                        </span>
+                        <MenuArrow />
+                      </Link>
 
-            {/* Socials sit below the menu, pushed toward the bottom of the sheet. */}
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 + nav.length * 0.08 }}
-              className="mt-8 flex items-center gap-4 md:mt-12"
-            >
-              {socials.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={s.label}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:border-neon hover:bg-neon hover:text-primary-foreground"
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
-                    <path d={s.d} />
-                  </svg>
-                </a>
-              ))}
-            </motion.div>
+                      {hasSub && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenDropdowns((prev) => ({ ...prev, [n.to]: !prev[n.to] }))
+                          }
+                          aria-expanded={Boolean(openDropdowns[n.to])}
+                          aria-label={`Toggle ${n.to === "/about" ? "News" : n.label} subcategory dropdown`}
+                          className={`absolute left-[calc(100%+0.625rem)] top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-300 sm:left-[calc(100%+0.75rem)] sm:h-8 sm:w-8 md:left-[calc(100%+1rem)] md:h-9 md:w-9 ${
+                            openDropdowns[n.to]
+                              ? "rotate-180 border-neon bg-neon text-primary-foreground shadow-lg shadow-neon/30"
+                              : "border-white/30 text-white/80 hover:border-neon hover:text-neon-ink"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-4.5 md:w-4.5"
+                            aria-hidden="true"
+                          >
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Dynamic Subnav dropdown: renders all subcategories for this item */}
+                    <AnimatePresence>
+                      {hasSub && openDropdowns[n.to] && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0, y: -4 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -4 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="mt-2 flex flex-col items-center gap-2 overflow-hidden sm:mt-2.5"
+                        >
+                          {n.subcategories?.map((sub) => (
+                            <Link
+                              key={sub.to + sub.label}
+                              to={sub.to}
+                              onClick={() => {
+                                setOpen(false);
+                                setOpenDropdowns({});
+                              }}
+                              className="group/sub inline-flex items-center gap-2 rounded-full border border-neon/50 bg-neon/10 px-4 py-1.5 font-display text-xl tracking-wider text-neon-ink transition-all duration-300 hover:bg-neon hover:text-primary-foreground sm:gap-2.5 sm:px-5 sm:py-2 sm:text-2xl md:text-3xl"
+                            >
+                              <span className="inline-block transition-transform duration-300 ease-out group-hover/sub:translate-x-0.5">
+                                {sub.label}
+                              </span>
+                              <span className="text-base leading-none sm:text-lg">→</span>
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+
+              {/* Socials sit below the menu */}
+              <motion.div
+                initial={{ y: 25, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.15 + nav.length * 0.05 }}
+                className="mt-4 flex items-center gap-3 sm:mt-6 sm:gap-4 md:mt-8"
+              >
+                {socialLinks.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={s.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:border-neon hover:bg-neon hover:text-primary-foreground sm:h-10 sm:w-10"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-4 w-4 sm:h-4.5 sm:w-4.5"
+                      aria-hidden
+                    >
+                      <path d={s.d} />
+                    </svg>
+                  </a>
+                ))}
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -307,60 +407,342 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const settings = useSettings();
+  const socialLinks = useSocials();
+  const nav = useNav();
+  const [footerAboutDropdownOpen, setFooterAboutDropdownOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <footer className="theme-dark border-t border-border bg-background text-foreground">
-      <div className="overflow-hidden border-b border-border py-4">
-        <div className="marquee flex w-max gap-12 whitespace-nowrap font-display text-3xl md:text-5xl">
+    <footer className="theme-dark relative border-t border-border/80 bg-background text-foreground">
+      {/* Top Cinema Marquee Ribbon */}
+      <div className="relative overflow-hidden border-b border-border/60 bg-black/60 py-4.5 backdrop-blur-sm">
+        <div className="marquee flex w-max gap-8 whitespace-nowrap font-display text-2xl tracking-[0.04em] uppercase sm:text-3xl md:text-4xl text-foreground/90">
           {Array.from({ length: 2 }).map((_, k) => (
-            <div key={k} className="flex gap-12">
-              <span>Stories worth the dark</span>
-              <span className="text-neon-ink"></span>
-              <span className="text-outline">See it big</span>
-              <span className="text-accent"></span>
-              <span>Stories worth the dark</span>
-              <span className="text-neon-ink"></span>
-              <span className="text-outline">See it big</span>
-              <span className="text-accent"></span>
+            <div key={k} className="flex items-center gap-8">
+              <span>Stories Worth The Dark</span>
+              <span className="text-neon-ink text-sm sm:text-base">✦</span>
+              <span className="text-outline">Cinema Without Compromise</span>
+              <span className="text-accent text-sm sm:text-base">✦</span>
+              <span>Independent & Loud</span>
+              <span className="text-neon-ink text-sm sm:text-base">✦</span>
+              <span className="text-outline">Cannes · Sundance · Venice</span>
+              <span className="text-accent text-sm sm:text-base">✦</span>
+              <span>See It Big</span>
+              <span className="text-neon-ink text-sm sm:text-base">✦</span>
             </div>
           ))}
         </div>
       </div>
-      <div className="mx-auto grid max-w-[1600px] gap-10 px-5 py-14 md:grid-cols-4 md:px-10">
-        <div className="md:col-span-2">
-          <img src={logo} alt="Fragrant Nature Film Productions" className="w-64 md:w-96" />
-          <p className="mt-4 max-w-sm text-muted-foreground">
-            An independent film studio for unruly, unforgettable cinema.
-          </p>
-        </div>
-        <div className="space-y-2 font-mono text-xs uppercase tracking-[0.2em]">
-          {nav.map((n) => (
-            <Link key={n.to} to={n.to} className="block hover:text-neon-ink">
-              {n.label}
+
+      {/* Main Footer Content */}
+      <div className="relative mx-auto max-w-[1600px] px-5 py-16 md:px-10 lg:py-20">
+        {/* Subtle ambient spotlight */}
+        <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 h-72 w-full max-w-4xl bg-gradient-to-b from-neon/[0.04] via-transparent to-transparent blur-3xl" />
+
+        <div className="relative grid gap-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-10">
+          {/* Col 1: Studio Brand & Identity (lg:col-span-4) */}
+          <div className="space-y-6 sm:col-span-2 lg:col-span-4">
+            <Link
+              to="/"
+              className="inline-block transition-transform duration-300 hover:scale-[1.02]"
+            >
+              <img
+                src={logo}
+                alt="Fragrant Nature Film Creations"
+                className="w-56 sm:w-64 md:w-72"
+              />
             </Link>
-          ))}
-        </div>
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Newsletter
-          </p>
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="mt-3 flex border-b border-foreground"
-          >
-            <input
-              type="email"
-              aria-label="Email address"
-              autoComplete="email"
-              placeholder="your@email.com"
-              className="w-full bg-transparent py-2 placeholder:text-muted-foreground"
-            />
-            <button className="font-mono text-xs uppercase text-neon-ink">Join →</button>
-          </form>
+
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+              An independent film studio championing fearless directors, original visions, and
+              unforgettable theatrical experiences built for the dark.
+            </p>
+
+            {/* Studio Hubs Status Badge */}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-border/80 bg-white/[0.03] px-3.5 py-1.5 backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-neon opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-neon" />
+              </span>
+              <span className="font-sans text-[11px] font-bold uppercase tracking-tight text-foreground/90">
+                {(settings.address || "Brooklyn · London · Kochi")
+                  .split("·")
+                  .map((part, i, parts) => (
+                    <span key={part}>
+                      {part.trim()}
+                      {i < parts.length - 1 && <span className="text-neon-ink"> · </span>}
+                    </span>
+                  ))}
+              </span>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-2.5 pt-1">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={s.label}
+                  className="group flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-white/[0.02] text-muted-foreground transition-all duration-300 hover:border-neon hover:bg-neon hover:text-primary-foreground hover:shadow-lg hover:shadow-neon/20"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-4 w-4 transition-transform duration-300 group-hover:scale-110"
+                    aria-hidden
+                  >
+                    <path d={s.d} />
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Col 2: Slate Navigation (lg:col-span-3) */}
+          <div className="lg:col-span-3">
+            <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-neon-ink">
+              Cinema Slate
+            </p>
+            <h4 className="mt-1 font-display text-xl uppercase tracking-wide text-foreground">
+              Navigation
+            </h4>
+
+            <div className="mt-5 space-y-3 font-sans text-xs font-bold uppercase tracking-tight">
+              {nav.map((n) => {
+                const hasSub =
+                  "subcategories" in n && Boolean(n.subcategories && n.subcategories.length > 0);
+                return (
+                  <div key={n.to} className="space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <Link
+                        to={n.to}
+                        className="group inline-flex items-center gap-1.5 transition-colors hover:text-neon-ink"
+                      >
+                        <span className="text-muted-foreground/60 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-neon-ink">
+                          /
+                        </span>
+                        <span className="transition-transform duration-300 group-hover:translate-x-1">
+                          {n.label}
+                        </span>
+                      </Link>
+
+                      {hasSub && (
+                        <button
+                          type="button"
+                          onClick={() => setFooterAboutDropdownOpen((o) => !o)}
+                          aria-expanded={footerAboutDropdownOpen}
+                          aria-label="Toggle footer News dropdown"
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-300 ${
+                            footerAboutDropdownOpen
+                              ? "rotate-180 border-neon bg-neon text-primary-foreground shadow-sm shadow-neon/30"
+                              : "border-white/30 text-white/80 hover:border-neon hover:text-neon-ink"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-3.5 w-3.5"
+                            aria-hidden="true"
+                          >
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Dropdown: dynamic subcategory pills */}
+                    <AnimatePresence>
+                      {hasSub && footerAboutDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0, y: -4 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -4 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="my-1.5 flex flex-col items-start gap-1.5 overflow-hidden pl-3"
+                        >
+                          {(n.subcategories ?? []).map((sub) => (
+                            <Link
+                              key={sub.to}
+                              to={sub.to}
+                              className="group/news inline-flex items-center gap-2.5 rounded-full border border-neon/50 bg-neon/10 px-4 py-1.5 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink transition-all duration-300 hover:bg-neon hover:text-primary-foreground hover:shadow-md hover:shadow-neon/20"
+                            >
+                              <span className="inline-block transition-transform duration-300 ease-out group-hover/news:translate-x-1">
+                                {sub.label}
+                              </span>
+                              <span className="text-sm leading-none">→</span>
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Col 3: Direct Department Contacts (lg:col-span-2) */}
+          <div className="space-y-4 lg:col-span-2">
+            <div>
+              <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-neon-ink">
+                Direct Lines
+              </p>
+              <h4 className="mt-1 font-display text-xl uppercase tracking-wide text-foreground">
+                Inquiries
+              </h4>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-muted-foreground">
+              <div>
+                <p className="font-sans text-[10px] font-bold uppercase tracking-tight text-foreground/80">
+                  Studio & Development
+                </p>
+                <a
+                  href={`mailto:${settings.email || "hello@fragrantnaturefilms.com"}`}
+                  className="mt-0.5 block font-mono text-[11px] transition-colors hover:text-neon-ink"
+                >
+                  {settings.email || "hello@fragrantnaturefilms.com"}
+                </a>
+              </div>
+
+              <div>
+                <p className="font-sans text-[10px] font-bold uppercase tracking-tight text-foreground/80">
+                  Press & Festivals
+                </p>
+                <a
+                  href="mailto:press@fragrantnaturefilms.com"
+                  className="mt-0.5 block font-mono text-[11px] transition-colors hover:text-neon-ink"
+                >
+                  press@fragrantnaturefilms.com
+                </a>
+              </div>
+
+              <div>
+                <p className="font-sans text-[10px] font-bold uppercase tracking-tight text-foreground/80">
+                  Theatrical & DCP
+                </p>
+                <a
+                  href="mailto:distribution@fragrantnaturefilms.com"
+                  className="mt-0.5 block font-mono text-[11px] transition-colors hover:text-neon-ink"
+                >
+                  distribution@fragrantnaturefilms.com
+                </a>
+              </div>
+
+              <div className="pt-2">
+                <Link
+                  to="/contact"
+                  className="group inline-flex items-center gap-1.5 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink hover:underline"
+                >
+                  <span>Full Directory</span>
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    →
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Col 4: Newsletter / The Dispatch (lg:col-span-3) */}
+          <div className="space-y-4 lg:col-span-3">
+            <div>
+              <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-neon-ink">
+                Screening Wire
+              </p>
+              <h4 className="mt-1 font-display text-xl uppercase tracking-wide text-foreground">
+                The Dispatch
+              </h4>
+            </div>
+
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Secret advance screenings, festival premiere tickets, 35mm prints, and director
+              dispatches delivered direct.
+            </p>
+
+            {newsletterSubmitted ? (
+              <div className="rounded-2xl border border-neon/40 bg-neon/10 p-4 text-xs">
+                <p className="font-sans font-bold uppercase tracking-tight text-neon-ink">
+                  ✦ You're On The List
+                </p>
+                <p className="mt-1 text-foreground/80">
+                  We’ve reserved your screening updates. Look for our first dispatch soon.
+                </p>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (newsletterEmail.trim()) setNewsletterSubmitted(true);
+                }}
+                className="space-y-3"
+              >
+                <div className="relative flex items-center rounded-xl border border-border/80 bg-black/40 transition-colors focus-within:border-neon focus-within:ring-1 focus-within:ring-neon/40">
+                  <input
+                    type="email"
+                    required
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    aria-label="Email address"
+                    autoComplete="email"
+                    placeholder="your@email.com"
+                    className="w-full bg-transparent px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="mr-1.5 shrink-0 rounded-lg bg-neon px-3.5 py-1.5 font-sans text-xs font-bold uppercase tracking-tight text-primary-foreground transition-all duration-300 hover:opacity-90 hover:shadow-sm hover:shadow-neon/30"
+                  >
+                    Join →
+                  </button>
+                </div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/75">
+                  Zero noise · Direct invitations · Unsubscribe anytime
+                </p>
+              </form>
+            )}
+          </div>
         </div>
       </div>
-      <p className="px-5 pb-8 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground md:px-10">
-        © 2026 Fragrant Nature. A fictional studio.
-      </p>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-border/40 bg-black/40 px-5 py-6 md:px-10">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+            <p className="font-sans text-[11px] font-medium uppercase tracking-tight text-muted-foreground">
+              © {new Date().getFullYear()} {settings.siteName || "Fragrant Nature Film Productions"}
+              .
+            </p>
+            <span className="hidden text-muted-foreground/40 sm:inline">·</span>
+            <p className="font-sans text-[11px] font-medium uppercase tracking-tight text-muted-foreground/80">
+              {settings.footerNote || "Independent Cinema · Storytelling Without Compromise"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={scrollToTop}
+              className="group inline-flex items-center gap-1.5 font-sans text-[11px] font-bold uppercase tracking-tight text-muted-foreground transition-colors hover:text-neon-ink"
+            >
+              <span>Back To Top</span>
+              <span className="transition-transform duration-300 group-hover:-translate-y-0.5">
+                ↑
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
     </footer>
   );
 }
@@ -398,14 +780,16 @@ export function PageTitle({
   outline?: string;
   small?: boolean;
 }) {
-  // `small` tightens the display type for pages that want a lighter hero.
-  const size = small ? "text-[9vw] md:text-[6vw]" : "text-[14vw] md:text-[9vw]";
+  // `small` tightens the display type for pages that want a lighter hero with responsive clamps.
+  const size = small
+    ? "text-[clamp(2.4rem,8vw,5.5rem)] md:text-[clamp(3.5rem,6vw,6.5rem)] leading-[0.88]"
+    : "text-[clamp(3.2rem,13vw,8.5rem)] md:text-[clamp(4.5rem,9vw,11rem)] leading-[0.86]";
   return (
-    <section className="mx-auto max-w-[1600px] px-5 pb-12 pt-36 md:px-10 md:pt-44">
+    <section className="mx-auto max-w-[1600px] px-5 pb-8 pt-20 sm:pt-24 sm:pb-12 md:px-10 md:pt-44">
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-mono text-xs uppercase tracking-[0.3em] text-neon-ink"
+        className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink"
       >
         {eyebrow}
       </motion.p>
@@ -459,11 +843,11 @@ export function FilmCard({
             className="h-full w-full object-cover grayscale-[30%] transition-all duration-[1.2s] ease-out group-hover:scale-110 group-hover:grayscale-0"
           />
           <div className="absolute inset-0 scrim-b opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
-          <div className="absolute left-4 top-4 font-mono text-[10px] uppercase tracking-[0.25em] text-white/85">
+          <div className="absolute left-4 top-4 font-sans text-[11px] font-bold uppercase tracking-tight text-white/90">
             {String(index + 1).padStart(2, "0")} / {film.genre}
           </div>
           <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 group-hover:opacity-100">
-            <span className="flex h-20 w-20 scale-50 items-center justify-center rounded-full bg-neon font-mono text-[10px] uppercase tracking-widest text-primary-foreground transition-transform duration-500 group-hover:scale-100">
+            <span className="flex h-20 w-20 scale-50 items-center justify-center rounded-full bg-neon font-sans text-xs font-bold uppercase tracking-tight text-primary-foreground transition-transform duration-500 group-hover:scale-100">
               View
             </span>
           </div>
@@ -471,7 +855,7 @@ export function FilmCard({
             <h3 className="font-display text-3xl text-white transition-colors duration-300 group-hover:text-neon md:text-4xl">
               {film.title}
             </h3>
-            <p className="mt-2 translate-y-4 font-mono text-xs uppercase tracking-[0.2em] text-white/70 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+            <p className="mt-2 translate-y-4 font-sans text-xs font-bold uppercase tracking-tight text-white/80 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
               {film.director} — {film.release}
             </p>
           </div>
@@ -534,19 +918,19 @@ export function TrailerModal({
               initial={{ opacity: 0, letterSpacing: "0.5em" }}
               animate={{ opacity: 1, letterSpacing: "0.05em" }}
               transition={{ duration: 1.2 }}
-              className="absolute inset-0 flex items-center justify-center text-center font-display text-5xl md:text-8xl"
+              className="absolute inset-0 flex items-center justify-center p-4 text-center font-display text-2xl sm:text-4xl md:text-6xl lg:text-8xl"
             >
               {[film.tagline, film.title, film.laurels[0], film.release][Math.floor(t / 25) % 4]}
             </motion.p>
-            <div className="absolute inset-x-6 bottom-[3%] flex items-center gap-4 font-mono text-[10px] uppercase tracking-widest text-white">
-              <span>Trailer — {film.title}</span>
+            <div className="absolute inset-x-4 bottom-3 flex items-center gap-2 font-mono text-[9px] uppercase tracking-wider text-white sm:inset-x-6 sm:bottom-[3%] sm:gap-4 sm:text-[10px] sm:tracking-widest">
+              <span className="truncate max-w-[160px] sm:max-w-none">Trailer — {film.title}</span>
               <div className="h-px flex-1 bg-white/25">
                 <div className="h-px bg-neon" style={{ width: `${t}%` }} />
               </div>
             </div>
             <button
               onClick={onClose}
-              className="absolute right-4 top-[2%] font-mono text-xs uppercase tracking-widest text-white hover:text-neon"
+              className="absolute right-3 top-2 font-mono text-[10px] uppercase tracking-wider text-white hover:text-neon sm:right-4 sm:top-[2%] sm:text-xs sm:tracking-widest"
             >
               Close ✕
             </button>

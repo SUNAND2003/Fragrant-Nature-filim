@@ -77,7 +77,7 @@ describe("App routing", () => {
     );
 
     expect(screen.getByRole("heading", { name: /awards/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /all honors/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /all awards/i })).toBeInTheDocument();
   });
 
   it("renders the login page with only email and password fields", () => {

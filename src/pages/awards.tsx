@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 
 import { useAwards, useFilmLookup } from "@/lib/content";
+import laurelImg from "@/assets/laurel.png";
 import type { Award, Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
 import { PageTitle, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
@@ -12,14 +13,14 @@ const categories = ["All", "Major Prize", "Selection", "Craft", "Audience"] as c
 type FilterCategory = (typeof categories)[number];
 
 const categoryLabels: Record<FilterCategory, string> = {
-  All: "All Honors",
+  All: "All Awards",
   "Major Prize": "Major Prizes",
   Selection: "Official Selections",
   Craft: "Craft & Technical",
   Audience: "Audience Awards",
 };
 
-/** Chip/dot colors per honor type — green for the top prizes, ink for
+/** Chip/dot colors per award type — green for the top prizes, ink for
  *  selections, pink for craft, quiet grey for audience awards. */
 const categoryTone: Record<Exclude<FilterCategory, "All">, { chip: string; dot: string }> = {
   "Major Prize": {
@@ -41,7 +42,7 @@ const categoryTone: Record<Exclude<FilterCategory, "All">, { chip: string; dot: 
 };
 
 const stats = [
-  { value: 118, label: "Festival Honors" },
+  { value: 118, label: "Festival Awards" },
   { value: 9, label: "Academy Noms" },
   { value: 3, label: "Grand Jury Prizes" },
   { value: 6, label: "Global Premieres" },
@@ -82,25 +83,15 @@ function StatBlock({ stat, index }: { stat: (typeof stats)[number]; index: numbe
   );
 }
 
-/** Classic cinema laurel wreath icon. */
+/** Authentic cinema golden laurel wreath image. */
 function LaurelWreath({ className = "h-12 w-12" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      {/* Left laurel branch */}
-      <path
-        d="M26 50C19 45 14 38 13 28C12 21 13 14 18 6M13 28C16 26.5 20 29 21.5 33M14 20C17 18 22 19 23.5 23M16 12C20 9.5 24 12 25.5 16M19 4C23 2 26 5 27 9"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      {/* Right laurel branch */}
-      <path
-        d="M38 50C45 45 50 38 51 28C52 21 51 14 46 6M51 28C48 26.5 44 29 42.5 33M50 20C47 18 42 19 40.5 23M48 12C44 9.5 40 12 38.5 16M45 4C41 2 38 5 37 9"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-    </svg>
+    <img
+      src={laurelImg}
+      alt="Cinema Laurel"
+      loading="lazy"
+      className={`object-contain transition-transform duration-500 group-hover:scale-110 ${className}`}
+    />
   );
 }
 
@@ -162,7 +153,7 @@ function FeaturedHonor({
 
           <div>
             <p className="font-sans text-[11px] font-bold uppercase tracking-tight text-muted-foreground">
-              Headline honor
+              Headline award
             </p>
             <h2 className="mt-2 font-display text-4xl md:text-5xl lg:text-6xl">{item.award}</h2>
           </div>
@@ -215,9 +206,9 @@ export function AwardsPage() {
 
   return (
     <>
-      <PageTitle eyebrow="118 Global Honors" title="Festival" outline="Awards" />
+      <PageTitle eyebrow="118 Global Awards" title="Festival" outline="Awards" />
 
-      {/* Dark honors band: count-up milestones + a marquee of the festivals */}
+      {/* Dark awards band: count-up milestones + a marquee of the festivals */}
       <section className="theme-dark border-y border-border bg-background text-foreground">
         <div className="mx-auto max-w-[1600px] px-5 pt-12 md:px-10">
           <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
@@ -245,7 +236,7 @@ export function AwardsPage() {
         {/* Filter pills + live result count */}
         <Reveal className="mb-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2.5" role="group" aria-label="Filter honors">
+            <div className="flex flex-wrap gap-2.5" role="group" aria-label="Filter awards">
               {categories.map((cat) => {
                 const active = activeFilter === cat;
                 return (
@@ -282,7 +273,7 @@ export function AwardsPage() {
               })}
             </div>
             <p className="font-sans text-xs font-semibold uppercase tracking-tight text-muted-foreground">
-              Showing {filteredAwards.length} of {awardsList.length} honors
+              Showing {filteredAwards.length} of {awardsList.length} awards
             </p>
           </div>
         </Reveal>
@@ -411,14 +402,14 @@ export function AwardsPage() {
         {/* Empty state — every filter currently has matches, but keep it graceful */}
         {filteredAwards.length === 0 && (
           <p className="border border-border bg-card/40 p-10 text-center font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground">
-            No honors in this category yet.
+            No awards in this category yet.
           </p>
         )}
 
         <Reveal className="mt-16">
           <div className="flex flex-wrap items-end justify-between gap-4 border-t border-border pt-8">
             <p className="max-w-2xl font-display text-3xl md:text-5xl">
-              Every honor belongs to <span className="text-neon-ink">a film</span>.
+              Every award belongs to <span className="text-neon-ink">a film</span>.
             </p>
             <Link
               to="/films"

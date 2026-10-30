@@ -10,6 +10,7 @@ import {
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import type { Award, Film } from "@/lib/films";
+import laurelImg from "@/assets/laurel.png";
 import { useAwards, useContent, useFilmLookup, useFilms } from "@/lib/content";
 import { useLikes } from "@/lib/likes";
 import { usePageMeta } from "@/lib/use-page-meta";
@@ -473,98 +474,6 @@ function WatchNow() {
   );
 }
 
-/** Cannes Palme d'Or / Festival laurel icon matching NEON's laurel badge */
-function CannesLaurelIcon({ className = "h-5 w-auto shrink-0" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 38 22"
-      fill="currentColor"
-      className={className}
-      aria-label="Cannes Palme d'Or"
-    >
-      <path
-        d="M4 17.5C1.8 14.5.8 10.5 2 6c1.2 2.6 2.8 4.6 4.8 5.6C4.8 8 5 4.5 6.8 1.8c1.4 2.4 3 4.2 4.4 5.5-1.5-3.2-1.3-6.2.2-8.5 1.5 2 2.7 4 3.4 5.8 0-2.5.6-4.8 1.8-6.5.6 2.2 1 4.2 1 6.2M34 17.5c2.2-3 3.2-7 2-11.5-1.2 2.6-2.8 4.6-4.8 5.6 2-3.6 1.8-7.1 0-9.8-1.4 2.4-3 4.2-4.4 5.5 1.5-3.2 1.3-6.2-.2-8.5-1.5 2-2.7 4-3.4 5.8 0-2.5-.6-4.8-1.8-6.5-.6 2.2-1 4.2-1 6.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-      <ellipse
-        cx="19"
-        cy="11"
-        rx="4.8"
-        ry="8.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1"
-      />
-      <line
-        x1="19"
-        y1="4.5"
-        x2="19"
-        y2="17.5"
-        stroke="currentColor"
-        strokeWidth="0.9"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16.5 7.5c1.2.6 2.5 1 2.5 1M21.5 7.5c-1.2.6-2.5 1-2.5 1M16 10.5c1.5.6 3 1 3 1M22 10.5c-1.5.6-3 1-3 1M16.5 13.5c1.2.5 2.5.8 2.5.8M21.5 13.5c-1.2.5-2.5.8-2.5.8"
-        stroke="currentColor"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Academy Award / Oscar Statuette silhouette matching NEON */
-function OscarStatueIcon({ className = "h-5 w-auto shrink-0" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 14 26" fill="currentColor" className={className} aria-label="Academy Award">
-      <circle cx="7" cy="3" r="1.9" />
-      <path d="M5.1 6.2h3.8c.7 0 1.2.5 1.2 1.2v5.2c0 .4-.2.8-.5 1.1L8.2 19.5H5.8L4.4 13.7c-.3-.3-.5-.7-.5-1.1V7.4c0-.7.5-1.2 1.2-1.2z" />
-      <line x1="7" y1="7.8" x2="7" y2="15.5" stroke="currentColor" strokeWidth="0.75" />
-      <rect x="3.8" y="20.2" width="6.4" height="1.6" rx="0.4" />
-      <rect x="2.6" y="22.4" width="8.8" height="2.2" rx="0.5" />
-    </svg>
-  );
-}
-
-/** Festival laurel wreath matching NEON */
-function FestivalWreathIcon({
-  className = "h-5 w-auto shrink-0",
-  title = "Festival Winner",
-}: {
-  className?: string;
-  title?: string;
-}) {
-  return (
-    <svg
-      viewBox="0 0 34 22"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.2}
-      className={className}
-      aria-label={title}
-    >
-      <path
-        d="M4 17.5C1.8 14.5.8 10.5 2 6c1.2 2.6 2.8 4.6 4.8 5.6C4.8 8 5 4.5 6.8 1.8c1.4 2.4 3 4.2 4.4 5.5M30 17.5c2.2-3 3.2-7 2-11.5-1.2 2.6-2.8 4.6-4.8 5.6 2-3.6 1.8-7.1 0-9.8-1.4 2.4-3 4.2-4.4 5.5"
-        strokeLinecap="round"
-      />
-      <circle
-        cx="17"
-        cy="11"
-        r="3.2"
-        fill="currentColor"
-        fillOpacity={0.25}
-        stroke="currentColor"
-        strokeWidth={1}
-      />
-      <path d="M17 8.5v5M14.5 11h5" stroke="currentColor" strokeWidth={1} strokeLinecap="round" />
-    </svg>
-  );
-}
-
 /** Award Winners section matching the exact design of neonrated.com */
 function AwardWinners() {
   const rowRef = useRef<HTMLDivElement>(null);
@@ -587,21 +496,7 @@ function AwardWinners() {
   const awardFilms = awardsList
     .map((award) => ({ award, film: getFilm(award.filmSlug) }))
     .filter((entry): entry is { award: Award; film: Film } => Boolean(entry.film))
-    .slice(0, 8)
-    .map(({ award, film }) => ({
-      award,
-      film,
-      icons: (
-        <>
-          {award.category === "Major Prize" ? (
-            <CannesLaurelIcon className="h-4.5 w-auto" />
-          ) : (
-            <FestivalWreathIcon title={award.award} className="h-4.5 w-auto" />
-          )}
-          <OscarStatueIcon className="h-5 w-auto" />
-        </>
-      ),
-    }));
+    .slice(0, 8);
 
   return (
     <section className="border-b border-border">
@@ -640,7 +535,7 @@ function AwardWinners() {
           to="/awards"
           className="font-sans text-xs font-bold uppercase tracking-tight hover:underline hover:text-neon-ink"
         >
-          All honors →
+          All awards →
         </Link>
       </div>
 
@@ -648,7 +543,7 @@ function AwardWinners() {
         ref={rowRef}
         className="no-scrollbar flex snap-x gap-5 overflow-x-auto scroll-pl-5 px-5 pb-20 md:scroll-pl-10 md:px-10"
       >
-        {awardFilms.map(({ award, film: f, icons }, index) => {
+        {awardFilms.map(({ award, film: f }, index) => {
           const liked = likes.includes(f.slug);
           return (
             <div
@@ -709,16 +604,19 @@ function AwardWinners() {
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center justify-between gap-3 px-0.5">
+              <div className="mt-3 flex items-center gap-2 px-0.5">
                 <Link
                   to={`/films/${f.slug}`}
-                  className="font-sans text-sm font-bold uppercase tracking-tight transition-colors group-hover:text-neon-ink md:text-base"
+                  className="inline-flex items-center gap-2 font-sans text-sm font-bold uppercase tracking-tight transition-colors group-hover:text-neon-ink md:text-base"
                 >
-                  {f.title}
+                  <span>{f.title}</span>
+                  <img
+                    src={laurelImg}
+                    alt="Festival Laurel"
+                    title={award.award}
+                    className="h-5.5 w-auto shrink-0 object-contain transition-transform duration-300 group-hover:scale-110"
+                  />
                 </Link>
-                <span className="flex shrink-0 items-center gap-1.5 text-neon-ink" aria-hidden>
-                  {icons}
-                </span>
               </div>
             </div>
           );

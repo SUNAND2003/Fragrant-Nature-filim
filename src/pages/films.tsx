@@ -44,21 +44,37 @@ export function FilmsPage() {
 
   const subFacets: Facet[] = useMemo(() => {
     if (useTaxonomy) {
-      const scoped =
-        category === "all"
-          ? subcategories
-          : subcategories.filter((s) => s.category?.slug === category);
+      const normCat = category.toLowerCase();
+      if (normCat === "all") return [];
+      const scoped = subcategories.filter((s) => {
+        const catSlug = typeof s.category === "object" ? s.category?.slug?.toLowerCase() : undefined;
+        const catId = typeof s.category === "object" ? s.category?._id : s.category;
+        return catSlug === normCat || catId === category;
+      });
       return scoped.map((s) => ({ slug: s.slug, name: s.name }));
     }
-    return genreFacets;
-  }, [useTaxonomy, category, subcategories, genreFacets]);
+    return [];
+  }, [useTaxonomy, category, subcategories]);
 
   const list = useMemo(() => {
     return films.filter((f) => {
       if (useTaxonomy) {
-        if (category !== "all" && f.category?.slug !== category) return false;
-        if (subcategory !== "all" && !f.subcategories?.some((s) => s.slug === subcategory))
-          return false;
+        if (category !== "all") {
+          const normCat = category.toLowerCase();
+          const fCatSlug = f.category?.slug?.toLowerCase();
+          const fCatId = f.category?._id;
+          if (fCatSlug !== normCat && fCatId !== category) return false;
+
+          if (subcategory !== "all") {
+            const normSub = subcategory.toLowerCase();
+            const hasSub = f.subcategories?.some((s) => {
+              const sSlug = s.slug?.toLowerCase();
+              const sId = s._id;
+              return sSlug === normSub || sId === subcategory;
+            });
+            if (!hasSub) return false;
+          }
+        }
         return true;
       }
       return genre === "All" || f.genre === genre;
@@ -99,7 +115,7 @@ export function FilmsPage() {
             })}
           </div>
 
-          {subFacets.length > 1 && (
+          {subFacets.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"

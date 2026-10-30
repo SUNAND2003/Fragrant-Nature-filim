@@ -1,5 +1,5 @@
-import { Link, useSearchParams } from "react-router";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Link, useLocation, useSearchParams } from "react-router";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Loader2, Plus, Pencil, Tag, Layers, X, Folder, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ const emptySubcategory = { name: "", category: "", order: 0 };
 
 export function CategoriesSection() {
   const { refresh: refreshContent } = useContent();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const editId = params.get("edit");
   const tabParam = params.get("tab");
@@ -76,11 +77,10 @@ export function CategoriesSection() {
     }
   }, [editId]);
 
-  const loadSubcategories = useCallback(async (filterSlug = "") => {
+  const loadSubcategories = useCallback(async () => {
     setSubLoading(true);
     try {
-      const query = filterSlug ? `?category=${encodeURIComponent(filterSlug)}` : "";
-      const list = await api.get<Subcategory[]>(`/api/subcategories${query}`);
+      const list = await api.get<Subcategory[]>("/api/subcategories");
       setSubcategories(list);
     } catch (error) {
       reportError(error, "Could not load subcategories");
@@ -94,17 +94,54 @@ export function CategoriesSection() {
   }, [loadCategories]);
 
   useEffect(() => {
-    void loadSubcategories(subFilter);
-  }, [loadSubcategories, subFilter]);
+    void loadSubcategories();
+  }, [loadSubcategories]);
+
+  // Listen for direct create URLs or search params (e.g. /admin/categories/new, /admin/categories?create=true)
+  useEffect(() => {
+    const isCreateAction =
+      params.get("create") === "true" ||
+      params.get("new") === "true" ||
+      params.get("action") === "create" ||
+      location.pathname.endsWith("/new") ||
+      location.pathname.endsWith("/create");
+
+    if (isCreateAction) {
+      if (tabParam === "subcategories") {
+        setFormMode("subcategory");
+        setActiveTab("subcategories");
+        setEditingSubId(null);
+      } else {
+        setFormMode("category");
+        setActiveTab("categories");
+        setEditingCategoryId(null);
+        setCategoryForm(emptyCategory);
+      }
+      setTimeout(() => {
+        const id = tabParam === "subcategories" ? "sub-name" : "cat-name";
+        const input = document.getElementById(id);
+        input?.focus();
+        input?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+    }
+  }, [location.pathname, params, tabParam]);
 
   // Form mode openers
   const startCreateCategory = () => {
+    setActiveTab("categories");
     setFormMode("category");
     setEditingCategoryId(null);
     setCategoryForm(emptyCategory);
+    setParams({});
+    setTimeout(() => {
+      const input = document.getElementById("cat-name");
+      input?.focus();
+      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   };
 
   const startEditCategory = (category: Category) => {
+    setActiveTab("categories");
     setFormMode("category");
     setEditingCategoryId(category._id);
     setCategoryForm({
@@ -113,25 +150,45 @@ export function CategoriesSection() {
       accent: category.accent ?? "#7CFF3D",
       order: category.order ?? 0,
     });
+    setParams({ edit: category._id });
+    setTimeout(() => {
+      const input = document.getElementById("cat-name");
+      input?.focus();
+      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   };
 
   const startCreateSubcategory = (preferredCatId?: string) => {
+    setActiveTab("subcategories");
     setFormMode("subcategory");
     setEditingSubId(null);
     setSubForm({
       ...emptySubcategory,
       category: preferredCatId || items[0]?._id || "",
     });
+    setParams({ tab: "subcategories" });
+    setTimeout(() => {
+      const input = document.getElementById("sub-name");
+      input?.focus();
+      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   };
 
   const startEditSubcategory = (sub: Subcategory) => {
+    setActiveTab("subcategories");
     setFormMode("subcategory");
     setEditingSubId(sub._id);
     setSubForm({
       name: sub.name,
-      category: sub.category?._id ?? "",
+      category: typeof sub.category === "object" ? sub.category?._id : sub.category,
       order: sub.order ?? 0,
     });
+    setParams({ tab: "subcategories", editSub: sub._id });
+    setTimeout(() => {
+      const input = document.getElementById("sub-name");
+      input?.focus();
+      input?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   };
 
   // Submits
@@ -193,7 +250,7 @@ export function CategoriesSection() {
       }
       setEditingSubId(null);
       setSubForm(emptySubcategory);
-      await loadSubcategories(subFilter);
+      await loadSubcategories();
       await refreshContent();
     } catch (error) {
       reportError(error);
@@ -221,7 +278,7 @@ export function CategoriesSection() {
       toast.success(`Subcategory "${quickSubName.trim()}" added to ${category.name}!`);
       setQuickSubName("");
       setQuickCatId(null);
-      await loadSubcategories(subFilter);
+      await loadSubcategories();
       await refreshContent();
     } catch (error) {
       reportError(error, "Could not add subcategory");
@@ -241,7 +298,7 @@ export function CategoriesSection() {
           : "Category deleted",
       );
       await loadCategories();
-      await loadSubcategories(subFilter);
+      await loadSubcategories();
       await refreshContent();
     } catch (error) {
       reportError(error);
@@ -258,7 +315,7 @@ export function CategoriesSection() {
           ? `Subcategory deleted and unlinked from ${result.unlinked} film(s)`
           : "Subcategory deleted",
       );
-      await loadSubcategories(subFilter);
+      await loadSubcategories();
       await refreshContent();
     } catch (error) {
       reportError(error);
@@ -270,8 +327,25 @@ export function CategoriesSection() {
     label: cat.name,
   }));
 
-  const getSubcategoriesForCategory = (catId: string) =>
-    subcategories.filter((sub) => sub.category?._id === catId);
+  const getSubcategoriesForCategory = (cat: Category | string) => {
+    const catId = typeof cat === "string" ? cat : cat._id;
+    const catSlug = typeof cat === "string" ? cat : cat.slug?.toLowerCase();
+    return subcategories.filter((sub) => {
+      const subCatId = typeof sub.category === "object" ? sub.category?._id : sub.category;
+      const subCatSlug = typeof sub.category === "object" ? sub.category?.slug?.toLowerCase() : undefined;
+      return (catId && subCatId === catId) || (catSlug && subCatSlug === catSlug);
+    });
+  };
+
+  const displayedSubcategories = useMemo(() => {
+    if (!subFilter) return subcategories;
+    const norm = subFilter.toLowerCase();
+    return subcategories.filter((sub) => {
+      const subCatId = typeof sub.category === "object" ? sub.category?._id : sub.category;
+      const subCatSlug = typeof sub.category === "object" ? sub.category?.slug?.toLowerCase() : undefined;
+      return subCatId === subFilter || (subCatSlug && subCatSlug === norm);
+    });
+  }, [subcategories, subFilter]);
 
   return (
     <>
@@ -385,16 +459,28 @@ export function CategoriesSection() {
           {formMode === "category" ? (
             /* Category Creation / Edit Form */
             <form
+              id="category-form"
               onSubmit={(event) => void submitCategory(event)}
               className="space-y-5 border border-border bg-card p-5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <p className="font-display text-xl uppercase">
-                  {editingCategoryId ? "Edit category" : "New category"}
-                </p>
-                {editingCategoryId && (
-                  <span className="font-mono text-[10px] uppercase font-bold text-neutral-500">
+                <div>
+                  <p className="font-display text-xl uppercase">
+                    {editingCategoryId ? "Edit category" : "New category"}
+                  </p>
+                  <p className="font-sans text-xs text-muted-foreground mt-0.5">
+                    {editingCategoryId
+                      ? "Update details of this existing category."
+                      : "Create a top-level film category for your slate."}
+                  </p>
+                </div>
+                {editingCategoryId ? (
+                  <span className="border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
                     Editing
+                  </span>
+                ) : (
+                  <span className="border border-neon-ink/40 bg-neon-ink/10 px-2.5 py-1 font-mono text-[10px] uppercase font-bold text-neon-ink">
+                    New Category
                   </span>
                 )}
               </div>
@@ -480,16 +566,28 @@ export function CategoriesSection() {
           ) : (
             /* Subcategory Creation / Edit Form */
             <form
+              id="subcategory-form"
               onSubmit={(event) => void submitSubcategory(event)}
               className="space-y-5 border border-border bg-card p-5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <p className="font-display text-xl uppercase">
-                  {editingSubId ? "Edit subcategory" : "New subcategory"}
-                </p>
-                {editingSubId && (
-                  <span className="font-mono text-[10px] uppercase font-bold text-neutral-500">
+                <div>
+                  <p className="font-display text-xl uppercase">
+                    {editingSubId ? "Edit subcategory" : "New subcategory"}
+                  </p>
+                  <p className="font-sans text-xs text-muted-foreground mt-0.5">
+                    {editingSubId
+                      ? "Update details of this existing subcategory."
+                      : "Add a child subcategory under a parent category."}
+                  </p>
+                </div>
+                {editingSubId ? (
+                  <span className="border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
                     Editing
+                  </span>
+                ) : (
+                  <span className="border border-neon-ink/40 bg-neon-ink/10 px-2.5 py-1 font-mono text-[10px] uppercase font-bold text-neon-ink">
+                    New Subcategory
                   </span>
                 )}
               </div>
@@ -566,7 +664,7 @@ export function CategoriesSection() {
               <EmptyState>No categories yet — create the first one on the left.</EmptyState>
             ) : (
               items.map((category) => {
-                const catSubs = getSubcategoriesForCategory(category._id);
+                const catSubs = getSubcategoriesForCategory(category);
                 const isQuickAdding = quickCatId === category._id;
 
                 return (
@@ -756,7 +854,7 @@ export function CategoriesSection() {
                       : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {category.name} ({getSubcategoriesForCategory(category._id).length})
+                  {category.name} ({getSubcategoriesForCategory(category).length})
                 </button>
               ))}
             </div>
@@ -765,14 +863,14 @@ export function CategoriesSection() {
               <p className="flex items-center gap-2 font-sans text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading subcategories…
               </p>
-            ) : subcategories.length === 0 ? (
+            ) : displayedSubcategories.length === 0 ? (
               <EmptyState>
                 No subcategories found. Use the form on the left or the "+ Subcategory" button on a
                 category card to create one.
               </EmptyState>
             ) : (
               <div className="space-y-2">
-                {subcategories.map((sub) => (
+                {displayedSubcategories.map((sub) => (
                   <div
                     key={sub._id}
                     className="flex flex-wrap items-center justify-between gap-4 border border-border bg-card p-3 shadow-2xs"

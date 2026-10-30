@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import logo from "@/assets/icon.png";
 import { useLikes } from "@/lib/likes";
 import type { Film } from "@/lib/films";
-import { useFilmLookup, useNavigation, useSettings } from "@/lib/content";
+import { useFilmLookup, useFilms, useNavigation, useSettings } from "@/lib/content";
 import { buildNavItems, type MenuSubcategory, type NavMenuItem } from "@/lib/navigation";
 
 export type Subcategory = MenuSubcategory;
@@ -977,31 +977,71 @@ export function ScreenRequestModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [organization, setOrganization] = useState("");
+  const allFilms = useFilms();
+
+  // Contact Details
+  const [fullName, setFullName] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
-  const [date, setDate] = useState("");
-  const [screeningType, setScreeningType] = useState("Theatrical / Cinema Booking");
-  const [notes, setNotes] = useState("");
+  const [cityAndCountry, setCityAndCountry] = useState("");
+
+  // Screening Details
+  const [selectedFilm, setSelectedFilm] = useState(film.title);
+  const [screeningType, setScreeningType] = useState<
+    "public" | "educational" | "festival" | "private/corporate" | "other"
+  >("public");
+  const [proposedDate, setProposedDate] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [audienceSize, setAudienceSize] = useState("");
+  const [chargeAdmission, setChargeAdmission] = useState<"Yes" | "No" | "">("");
+  const [preferredFormat, setPreferredFormat] = useState<
+    "DCP" | "digital file" | "Blu-ray" | "streaming link"
+  >("DCP");
+
+  // Additional comments
+  const [comments, setComments] = useState("");
+
+  // Agreement
+  const [agreed, setAgreed] = useState(false);
+
+  // States
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [referenceId, setReferenceId] = useState("");
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setSelectedFilm(film.title || (allFilms[0]?.title ?? "Fragrant Nature Film"));
+    } else {
       setSubmitted(false);
       setSubmitting(false);
     }
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
-  }, [open, onClose]);
+  }, [open, onClose, film.title, allFilms]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !organization.trim()) return;
+    if (
+      !fullName.trim() ||
+      !email.trim() ||
+      !phone.trim() ||
+      !cityAndCountry.trim() ||
+      !proposedDate ||
+      !venueAddress.trim() ||
+      !audienceSize.trim() ||
+      !chargeAdmission ||
+      !agreed
+    ) {
+      return;
+    }
+
     setSubmitting(true);
+    const ref = `SCR-${Math.floor(100000 + Math.random() * 900000)}`;
+    setReferenceId(ref);
+
     setTimeout(() => {
       setSubmitting(false);
       setSubmitted(true);
@@ -1016,7 +1056,7 @@ export function ScreenRequestModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-3 sm:p-4 backdrop-blur-md overflow-y-auto"
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 16 }}
@@ -1027,12 +1067,13 @@ export function ScreenRequestModal({
             role="dialog"
             aria-modal="true"
             aria-label={`Screen Request — ${film.title}`}
-            className="relative my-8 w-full max-w-xl overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0d] p-6 text-white shadow-2xl sm:p-8"
+            className="relative my-6 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0d] text-white shadow-2xl"
           >
             {/* Ambient subtle glow */}
             <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-neon/10 blur-3xl" />
 
-            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 p-6 sm:p-7 shrink-0 bg-[#0a0a0d]/95 backdrop-blur-sm">
               <div>
                 <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
                   Theatrical & Festival Bureau
@@ -1041,188 +1082,375 @@ export function ScreenRequestModal({
                   Screen Request
                 </h3>
                 <p className="mt-1 font-sans text-xs text-white/70">
-                  Request a theatrical DCP, 35mm print, or festival screener for{" "}
-                  <strong className="text-white font-bold">{film.title}</strong> ({film.year}).
+                  Request a screening for <strong className="text-white font-bold">{film.title}</strong> or any title from the studio catalogue.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border border-white/20 p-2 text-white/60 transition-colors hover:border-white hover:text-white cursor-pointer"
+                className="rounded-full border border-white/20 p-2 text-white/60 transition-colors hover:border-white hover:text-white cursor-pointer shrink-0"
                 aria-label="Close dialog"
               >
                 ✕
               </button>
             </div>
 
-            {submitted ? (
-              <div className="py-8 text-center space-y-4">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-neon/15 border border-neon/30 text-neon text-2xl font-bold">
-                  ✓
-                </div>
-                <h4 className="font-display text-2xl uppercase tracking-wide text-white">
-                  Request Dispatched
-                </h4>
-                <p className="mx-auto max-w-md font-sans text-xs text-white/70 leading-relaxed">
-                  Thank you, <strong>{name}</strong>. Your screening request for{" "}
-                  <strong>{film.title}</strong> at <strong>{organization}</strong> has been logged with our theatrical sales bureau. We will review print availability and reach out to <strong>{email}</strong>.
-                </p>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="rounded-none border border-white bg-white px-6 py-2.5 font-sans text-xs font-bold uppercase tracking-wider text-black transition-transform hover:scale-105 cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                      Your Name *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Jordan Hayes"
-                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                    />
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-7 space-y-6">
+              {submitted ? (
+                <div className="py-8 text-center space-y-4">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-neon/15 border border-neon/30 text-neon text-2xl font-bold">
+                    ✓
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                      Venue / Theater / Festival *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={organization}
-                      onChange={(e) => setOrganization(e.target.value)}
-                      placeholder="e.g. Metrograph Cinema"
-                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                    />
+                  <span className="inline-block border border-neon/30 bg-neon/10 px-3 py-1 font-mono text-[11px] font-bold text-neon uppercase tracking-wider">
+                    Ticket Reference: {referenceId}
+                  </span>
+                  <h4 className="font-display text-2xl uppercase tracking-wide text-white">
+                    Screening Request Dispatched
+                  </h4>
+                  <div className="mx-auto max-w-md rounded-lg border border-white/10 bg-white/5 p-4 text-left font-sans text-xs text-white/80 space-y-1.5">
+                    <p><strong className="text-white">Film Requested:</strong> {selectedFilm}</p>
+                    <p><strong className="text-white">Screening Type:</strong> {screeningType.toUpperCase()}</p>
+                    <p><strong className="text-white">Proposed Date:</strong> {proposedDate}</p>
+                    <p><strong className="text-white">Venue:</strong> {venueAddress}</p>
+                    <p><strong className="text-white">Expected Audience:</strong> {audienceSize}</p>
+                    <p><strong className="text-white">Admission Charged:</strong> {chargeAdmission}</p>
+                    <p><strong className="text-white">Preferred Format:</strong> {preferredFormat.toUpperCase()}</p>
+                    <p><strong className="text-white">Applicant:</strong> {fullName} ({email})</p>
+                    {organizationName && <p><strong className="text-white">Organization:</strong> {organizationName}</p>}
                   </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                      Email Address *
-                    </label>
-                    <input
-                      required
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="programmer@venue.com"
-                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1 (555) 0123"
-                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                      City / Location
-                    </label>
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. New York, NY"
-                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                      Target Date / Window
-                    </label>
-                    <input
-                      type="text"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      placeholder="e.g. November 2026"
-                      className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                    Screening Type
-                  </label>
-                  <select
-                    value={screeningType}
-                    onChange={(e) => setScreeningType(e.target.value)}
-                    className="h-10 w-full border border-white/15 bg-[#141418] px-3 font-sans text-xs text-white focus:border-neon focus:outline-none cursor-pointer"
-                  >
-                    <option value="Theatrical / Cinema Booking">Theatrical / Cinema Booking (DCP)</option>
-                    <option value="Film Festival Screening">Film Festival Official Selection</option>
-                    <option value="Repertory 35mm Print">Repertory 35mm Archival Print</option>
-                    <option value="College / University Screening">College / University / Museum</option>
-                    <option value="Press / Buyer Digital Screener">Press / Buyer Digital Screener</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
-                    Additional Notes
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Seating capacity, number of screenings, format preferences..."
-                    className="w-full border border-white/15 bg-white/5 p-3 font-sans text-xs text-white placeholder-white/30 focus:border-neon focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
-                  <Link
-                    to="/contact"
-                    onClick={onClose}
-                    className="font-sans text-xs text-white/60 hover:text-white underline"
-                  >
-                    Full Contact & Bureaus →
-                  </Link>
-                  <div className="flex gap-2">
+                  <p className="mx-auto max-w-md font-sans text-xs text-white/70 leading-relaxed">
+                    Thank you, <strong>{fullName}</strong>. Your screening request has been logged with our theatrical bureau. We will review print availability and reach out to <strong>{email}</strong> within 24–48 business hours.
+                  </p>
+                  <div className="pt-2">
                     <button
                       type="button"
                       onClick={onClose}
-                      className="border border-white/20 px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-white hover:border-white cursor-pointer"
+                      className="rounded-none border border-white bg-white px-6 py-2.5 font-sans text-xs font-bold uppercase tracking-wider text-black transition-transform hover:scale-105 cursor-pointer"
                     >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="border border-neon bg-neon px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-black transition-transform hover:scale-105 disabled:opacity-50 cursor-pointer"
-                    >
-                      {submitting ? "Sending…" : "Submit Request"}
+                      Close
                     </button>
                   </div>
                 </div>
-              </form>
-            )}
+              ) : (
+                <form id="screen-request-form" onSubmit={handleSubmit} className="space-y-6">
+                  {/* SECTION 1: Contact Details */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
+                        01
+                      </span>
+                      <h4 className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+                        Contact Details
+                      </h4>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Full Name <span className="text-neon">*</span>
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="e.g. Eleanor Vance"
+                          className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Organization Name
+                        </label>
+                        <input
+                          type="text"
+                          value={organizationName}
+                          onChange={(e) => setOrganizationName(e.target.value)}
+                          placeholder="e.g. Film Society / Cinema name"
+                          className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Email Address <span className="text-neon">*</span>
+                        </label>
+                        <input
+                          required
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="programmer@cinema.org"
+                          className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Phone Number <span className="text-neon">*</span>
+                        </label>
+                        <input
+                          required
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+1 (555) 019-2834"
+                          className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                        City and Country <span className="text-neon">*</span>
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={cityAndCountry}
+                        onChange={(e) => setCityAndCountry(e.target.value)}
+                        placeholder="e.g. London, United Kingdom"
+                        className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* SECTION 2: Screening Details */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
+                        02
+                      </span>
+                      <h4 className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+                        Screening Details
+                      </h4>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                        Which film would you like to screen? <span className="text-neon">*</span>
+                      </label>
+                      <select
+                        value={selectedFilm}
+                        onChange={(e) => setSelectedFilm(e.target.value)}
+                        className="h-10 w-full border border-white/15 bg-[#141418] px-3 font-sans text-xs text-white focus:border-neon focus:outline-none cursor-pointer"
+                      >
+                        {film.title && <option value={film.title}>{film.title} ({film.year})</option>}
+                        {allFilms
+                          .filter((f) => f.title !== film.title)
+                          .map((f) => (
+                            <option key={f.slug} value={f.title}>
+                              {f.title} ({f.year})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                        Type of screening <span className="text-neon">*</span>
+                      </label>
+                      <select
+                        required
+                        value={screeningType}
+                        onChange={(e) =>
+                          setScreeningType(
+                            e.target.value as "public" | "educational" | "festival" | "private/corporate" | "other",
+                          )
+                        }
+                        className="h-10 w-full border border-white/15 bg-[#141418] px-3 font-sans text-xs text-white focus:border-neon focus:outline-none cursor-pointer"
+                      >
+                        <option value="public">Public Screening</option>
+                        <option value="educational">Educational / University</option>
+                        <option value="festival">Festival</option>
+                        <option value="private/corporate">Private / Corporate</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Proposed Date <span className="text-neon">*</span>
+                        </label>
+                        <input
+                          required
+                          type="date"
+                          value={proposedDate}
+                          onChange={(e) => setProposedDate(e.target.value)}
+                          className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white focus:border-neon focus:bg-white/10 focus:outline-none transition-colors [color-scheme:dark]"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Expected Audience Size <span className="text-neon">*</span>
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={audienceSize}
+                          onChange={(e) => setAudienceSize(e.target.value)}
+                          placeholder="e.g. 150 attendees"
+                          className="h-10 w-full border border-white/15 bg-white/5 px-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                        Venue Name and Address <span className="text-neon">*</span>
+                      </label>
+                      <textarea
+                        required
+                        rows={2}
+                        value={venueAddress}
+                        onChange={(e) => setVenueAddress(e.target.value)}
+                        placeholder="e.g. Metrograph Cinema, 7 Ludlow St, New York, NY 10002"
+                        className="w-full border border-white/15 bg-white/5 p-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Will you charge admission? <span className="text-neon">*</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setChargeAdmission("Yes")}
+                            className={`flex-1 py-2.5 px-4 border font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              chargeAdmission === "Yes"
+                                ? "border-neon bg-neon text-primary-foreground shadow-sm"
+                                : "border-white/20 text-white/70 hover:border-white hover:text-white bg-white/5"
+                            }`}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setChargeAdmission("No")}
+                            className={`flex-1 py-2.5 px-4 border font-sans text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              chargeAdmission === "No"
+                                ? "border-neon bg-neon text-primary-foreground shadow-sm"
+                                : "border-white/20 text-white/70 hover:border-white hover:text-white bg-white/5"
+                            }`}
+                          >
+                            No
+                          </button>
+                        </div>
+                        {!chargeAdmission && (
+                          <p className="font-sans text-[10px] text-white/50">Please select Yes or No.</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="font-sans text-[11px] font-bold uppercase tracking-wider text-white/80">
+                          Preferred Format <span className="text-neon">*</span>
+                        </label>
+                        <select
+                          required
+                          value={preferredFormat}
+                          onChange={(e) =>
+                            setPreferredFormat(
+                              e.target.value as "DCP" | "digital file" | "Blu-ray" | "streaming link",
+                            )
+                          }
+                          className="h-10 w-full border border-white/15 bg-[#141418] px-3 font-sans text-xs text-white focus:border-neon focus:outline-none cursor-pointer"
+                        >
+                          <option value="DCP">DCP (Digital Cinema Package)</option>
+                          <option value="digital file">Digital File (ProRes / MP4)</option>
+                          <option value="Blu-ray">Blu-ray</option>
+                          <option value="streaming link">Streaming Link</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION 3: Additional Comments */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
+                        03
+                      </span>
+                      <h4 className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+                        Additional Comments
+                      </h4>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <textarea
+                        rows={3}
+                        value={comments}
+                        onChange={(e) => setComments(e.target.value)}
+                        placeholder="Any additional context, projection capabilities, discussion/Q&A plans, or technical requirements..."
+                        className="w-full border border-white/15 bg-white/5 p-3 font-sans text-xs text-white placeholder:text-white/30 focus:border-neon focus:bg-white/10 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* SECTION 4: Agreement */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
+                        04
+                      </span>
+                      <h4 className="font-sans text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+                        Agreement
+                      </h4>
+                    </div>
+
+                    <div className="rounded border border-white/15 bg-white/[0.03] p-4 transition-colors hover:border-white/25">
+                      <label className="flex items-start gap-3.5 cursor-pointer select-none">
+                        <input
+                          required
+                          type="checkbox"
+                          checked={agreed}
+                          onChange={(e) => setAgreed(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded-none border border-white/30 bg-white/5 text-neon focus:ring-0 cursor-pointer accent-[#7CFF3D]"
+                        />
+                        <span className="font-sans text-xs text-white/90 leading-relaxed">
+                          I understand this is a request only and is not confirmed until approved in writing.{" "}
+                          <span className="text-neon font-bold">*</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Submit Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10">
+                    <Link
+                      to="/contact"
+                      onClick={onClose}
+                      className="font-sans text-xs text-white/60 hover:text-white underline"
+                    >
+                      Full Contact & Bureaus →
+                    </Link>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="border border-white/20 px-4 py-2 font-sans text-xs font-bold uppercase tracking-wider text-white hover:border-white cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submitting || !chargeAdmission || !agreed}
+                        className="border border-neon bg-neon px-6 py-2 font-sans text-xs font-bold uppercase tracking-wider text-black transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+                      >
+                        {submitting ? "Sending…" : "Submit Request"}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
           </motion.div>
         </motion.div>
       )}

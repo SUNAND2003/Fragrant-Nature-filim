@@ -128,12 +128,22 @@ function AdminShell() {
         <div className="mx-auto max-w-6xl">
           <Routes>
             <Route index element={<DashboardSection />} />
+            <Route path="films/*" element={<FilmsSection />} />
             <Route path="films" element={<FilmsSection />} />
+            <Route path="categories/*" element={<CategoriesSection />} />
             <Route path="categories" element={<CategoriesSection />} />
+            <Route path="category/*" element={<Navigate to="/admin/categories" replace />} />
+            <Route path="category" element={<Navigate to="/admin/categories" replace />} />
+            <Route path="create-category" element={<Navigate to="/admin/categories?create=true" replace />} />
+            <Route path="gallery/*" element={<GallerySection />} />
             <Route path="gallery" element={<GallerySection />} />
-            <Route path="subcategories" element={<Navigate to="/admin/categories" replace />} />
+            <Route path="subcategories/*" element={<Navigate to="/admin/categories?tab=subcategories" replace />} />
+            <Route path="subcategories" element={<Navigate to="/admin/categories?tab=subcategories" replace />} />
+            <Route path="navigation/*" element={<NavigationSection />} />
             <Route path="navigation" element={<NavigationSection />} />
+            <Route path="news/*" element={<NewsSection />} />
             <Route path="news" element={<NewsSection />} />
+            <Route path="awards/*" element={<AwardsSection />} />
             <Route path="awards" element={<AwardsSection />} />
             <Route path="media" element={<Navigate to="/admin" replace />} />
             <Route path="settings" element={<SettingsSection />} />

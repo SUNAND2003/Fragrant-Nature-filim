@@ -93,8 +93,14 @@ export function CategoriesPage() {
     };
   }, [signedIn]);
 
-  const filmCount = (categorySlug: string) =>
-    films.filter((film) => film.category?.slug === categorySlug).length;
+  const filmCount = (categorySlug: string) => {
+    const norm = categorySlug.toLowerCase();
+    return films.filter(
+      (film) =>
+        film.category?.slug?.toLowerCase() === norm ||
+        film.category?._id === categorySlug,
+    ).length;
+  };
 
   return (
     <>
@@ -115,12 +121,12 @@ export function CategoriesPage() {
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button asChild size="sm" className="rounded-none">
-                  <Link to="/admin/categories">
+                  <Link to="/admin/categories?create=true">
                     <Plus /> New category
                   </Link>
                 </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-none">
-                  <Link to="/admin/subcategories">
+                  <Link to="/admin/categories?tab=subcategories&create=true">
                     <Tags /> New subcategory
                   </Link>
                 </Button>
@@ -174,7 +180,14 @@ export function CategoriesPage() {
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category, index) => {
-              const subs = subcategories.filter((sub) => sub.category?._id === category._id);
+              const subs = subcategories.filter((sub) => {
+                const catId = typeof sub.category === "object" ? sub.category?._id : sub.category;
+                const catSlug = typeof sub.category === "object" ? sub.category?.slug?.toLowerCase() : undefined;
+                return (
+                  catId === category._id ||
+                  (catSlug && catSlug === category.slug?.toLowerCase())
+                );
+              });
               return (
                 <motion.article
                   key={category._id}

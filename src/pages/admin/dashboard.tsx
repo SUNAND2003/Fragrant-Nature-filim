@@ -89,11 +89,18 @@ export function DashboardSection() {
         title="Dashboard"
         description="Catalogue counts, the last films touched, and the state of the API behind this panel."
         action={
-          <Button type="button" asChild className="rounded-none">
-            <Link to="/admin/films">
-              <Plus /> New film
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" asChild className="rounded-none bg-neutral-900 text-white hover:bg-neutral-800">
+              <Link to="/admin/films">
+                <Plus className="h-4 w-4" /> New film
+              </Link>
+            </Button>
+            <Button type="button" variant="outline" asChild className="rounded-none border-neutral-300 text-neutral-800 hover:bg-neutral-100">
+              <Link to="/admin/categories?create=true">
+                <Plus className="h-4 w-4" /> New category
+              </Link>
+            </Button>
+          </div>
         }
       />
 

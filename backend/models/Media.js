@@ -10,7 +10,12 @@ const mediaSchema = new mongoose.Schema(
     width: { type: Number, default: null },
     height: { type: Number, default: null },
     format: { type: String, default: "" },
-    kind: { type: String, enum: ["poster", "news", "gallery", "misc"], default: "misc" },
+    kind: {
+      type: String,
+      enum: ["poster", "banner", "still", "coming-soon", "news", "gallery", "video", "misc"],
+      default: "misc",
+    },
+    resourceType: { type: String, enum: ["image", "video"], default: "image" },
   },
   { timestamps: true },
 );

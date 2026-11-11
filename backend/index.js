@@ -33,6 +33,17 @@ async function main() {
     );
   });
 
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `\n⚠️  Port ${config.port} is already in use by another process.\nAnother backend instance is already running on http://127.0.0.1:${config.port}.\n`,
+      );
+    } else {
+      console.error(`\n⚠️  Server error: ${err.message}\n`);
+    }
+    process.exit(1);
+  });
+
   const shutdown = async () => {
     server.close();
     await disconnectDB();

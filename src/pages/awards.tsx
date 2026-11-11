@@ -6,7 +6,7 @@ import { useAwards, useFilmLookup } from "@/lib/content";
 import laurelImg from "@/assets/laurel.png";
 import type { Award, Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
+import { PageTitle, PlayButton, Reveal, ScreenRequestButton, SmartRailImage, TrailerModal } from "@/components/site";
 
 const categories = ["All", "Major Prize", "Selection", "Craft", "Audience"] as const;
 
@@ -122,12 +122,12 @@ function FeaturedHonor({
     >
       <div className="grid md:grid-cols-2">
         {/* Poster stage */}
-        <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:min-h-[440px]">
+        <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:min-h-[440px] bg-neutral-950 flex items-center justify-center">
           {film && (
-            <img
-              src={film.poster}
+            <SmartRailImage
+              src={film.still || film.banner || film.poster}
               alt={film.title}
-              className="absolute inset-0 h-full w-full object-cover grayscale-[35%] transition-all duration-[1.4s] ease-out group-hover:scale-105 group-hover:grayscale-0"
+              className="grayscale-[35%] transition-all duration-[1.4s] ease-out group-hover:scale-105 group-hover:grayscale-0"
             />
           )}
           <div className="absolute inset-0 scrim-b opacity-90" />
@@ -308,14 +308,13 @@ export function AwardsPage() {
                   className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card/40 transition-all duration-500 hover:-translate-y-1 hover:border-foreground/30 hover:bg-card hover:shadow-[0_24px_60px_-32px_rgba(0,0,0,0.45)]"
                 >
                   {/* Poster with festival caption */}
-                  <div className="relative aspect-[16/10] overflow-hidden bg-card">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-neutral-950 flex items-center justify-center">
                     {film && (
-                      <img
-                        src={film.poster}
+                      <SmartRailImage
+                        src={film.still || film.banner || film.poster}
                         alt={film.title}
                         loading="lazy"
-                        decoding="async"
-                        className="absolute inset-0 h-full w-full object-cover grayscale-[45%] transition-all duration-[1.2s] ease-out group-hover:scale-105 group-hover:grayscale-0"
+                        className="grayscale-[45%] transition-all duration-[1.2s] ease-out group-hover:scale-105 group-hover:grayscale-0"
                       />
                     )}
                     <div className="absolute inset-0 scrim-b opacity-90" />

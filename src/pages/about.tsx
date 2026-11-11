@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { heroImage } from "@/lib/films";
 import { useFilms, useNews } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, Reveal } from "@/components/site";
+import { PageTitle, Reveal, SmartRailImage } from "@/components/site";
 
 export function AboutPage() {
   usePageMeta({
@@ -16,8 +16,8 @@ export function AboutPage() {
   return (
     <>
       <PageTitle eyebrow="Est. 2014 — Brooklyn" title="Made for" outline="the dark" />
-      <div className="relative mx-5 aspect-[16/9] min-h-[180px] overflow-hidden rounded-2xl sm:aspect-[21/9] md:mx-10">
-        <img src={heroImage} alt="" className="kenburns h-full w-full object-cover" />
+      <div className="relative mx-5 aspect-[16/9] min-h-[180px] overflow-hidden rounded-2xl sm:aspect-[21/9] md:mx-10 bg-card">
+        <img src={heroImage} alt="" className="kenburns h-full w-full object-cover object-center" />
       </div>
       <section className="mx-auto grid max-w-[1600px] gap-16 px-5 py-24 md:grid-cols-2 md:px-10">
         <Reveal>
@@ -59,13 +59,15 @@ export function AboutPage() {
         ))}
         <div className="mt-24 grid grid-cols-3 gap-2 md:grid-cols-7">
           {films.map((f) => (
-            <img
-              key={f.slug}
-              src={f.poster}
-              alt={f.title}
-              loading="lazy"
-              className="aspect-[2/3] w-full rounded-2xl object-cover grayscale transition-all duration-500 hover:-translate-y-3 hover:grayscale-0"
-            />
+            <div key={f.slug} className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+              <SmartRailImage
+                src={f.poster || f.banner || f.still || ""}
+                alt={f.title}
+                loading="lazy"
+                orientation="portrait"
+                className="grayscale transition-all duration-500 hover:-translate-y-1 hover:grayscale-0"
+              />
+            </div>
           ))}
         </div>
       </section>
@@ -93,12 +95,12 @@ export function AboutPage() {
           {news.slice(0, 3).map((n, i) => (
             <Reveal key={n.id} delay={i * 0.08}>
               <Link to={`/news/${n.id}`} className="group block">
-                <div className="aspect-video overflow-hidden rounded-2xl bg-black">
-                  <img
+                <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                  <SmartRailImage
                     src={n.image}
                     alt=""
                     loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
                 <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">

@@ -40,6 +40,32 @@ export const subcategories = [
 
 export const films = [
   {
+    slug: "golam",
+    title: "Golam",
+    director: "Samjad",
+    year: 2024,
+    genre: "Thriller",
+    runtime: "2h 05m",
+    rating: "U/A",
+    poster: "/images/films/golam.jpg",
+    tagline: "Behind closed doors, the truth lies in the details.",
+    synopsis:
+      "When a successful corporate executive dies under mysterious circumstances in an office washroom, an astute young police officer must navigate corporate secrecy, shifting alibis, and high-tech forensics to uncover the elusive truth.",
+    cast: [
+      "Ranjith Sajeev",
+      "Dileesh Pothan",
+      "Sunny Wayne",
+      "Chinnu Chandni",
+      "Siddique",
+      "Alencier Ley Lopez",
+    ],
+    status: "now",
+    release: "In theaters June 07, 2024 · Streaming now",
+    laurels: ["Fragrant Nature Production", "Critics Choice — Best Investigative Thriller"],
+    accent: "#E0A93B",
+    screenRequest: true,
+  },
+  {
     slug: "red-highway",
     title: "Red Highway",
     director: "Mara Kessel",
@@ -176,6 +202,27 @@ export const films = [
 
 export const news = [
   {
+    id: 6,
+    date: "Jun 07, 2024",
+    tag: "Release",
+    title: "Golam: Inside the locked-room phenomenon",
+    excerpt:
+      "Samjad's pulse-pounding investigative thriller starring Ranjith Sajeev, Dileesh Pothan, and Sunny Wayne opens worldwide.",
+    image: "/images/films/golam.jpg",
+    author: "Studio Editorial",
+    readTime: "4 min read",
+    filmSlug: "golam",
+    content: [
+      "Fragrant Nature Film Creations is proud to announce the worldwide theatrical release of 'Golam' (ഗോളം), directed by Samjad and produced by Anne & Sajeev.",
+      "Starring Ranjith Sajeev in a standout turn as an investigative officer alongside Dileesh Pothan, Sunny Wayne, Chinnu Chandni, Siddique, and Alencier Ley Lopez, the locked-room mystery weaves tight forensic tension with layered corporate suspense.",
+      "Written by Praveen Viswanath and Samjad, with music by Aby Salvin Thomas and cinematography by Vijay, 'Golam' marks a striking new milestone for Fragrant Nature's dedication to boundary-pushing cinema.",
+    ],
+    quote: {
+      text: "Behind closed doors, the truth lies in the details that everyone else overlooked.",
+      author: "Samjad, Director",
+    },
+  },
+  {
     id: 1,
     date: "Oct 18, 2026",
     tag: "Awards",
@@ -283,6 +330,16 @@ export const news = [
 ];
 
 export const awards = [
+  {
+    id: "critics-choice-golam",
+    festival: "Kerala Film Critics Association",
+    award: "Best Investigative Thriller & Special Jury Honor",
+    year: 2024,
+    filmSlug: "golam",
+    category: "Major Prize",
+    citation:
+      "Awarded for exceptional locked-room narrative tension, forensic precision, and standout ensemble performances.",
+  },
   {
     id: "sundance-drown",
     festival: "Sundance Film Festival",
@@ -392,12 +449,40 @@ export const settings = {
 
 export const gallery = [
   {
+    filmTitle: "Golam",
+    filmSlug: "golam",
+    genre: "Thriller",
+    year: 2024,
+    poster: "/images/films/golam.jpg",
+    order: 0,
+    visible: true,
+    images: [
+      { url: "/images/films/golam.jpg", caption: "Official English key art & title poster", order: 1 },
+      { url: "/gallery/golam-theatrical.jpg", caption: "Theatrical release poster — June 07, 2024", order: 2 },
+      {
+        url: "/gallery/golam-cast.jpg",
+        caption: "Cast ensemble key visual with Ranjith Sajeev & Dileesh Pothan",
+        order: 3,
+      },
+      {
+        url: "/gallery/golam-office.jpg",
+        caption: "Office interrogation and crime scene breakdown",
+        order: 4,
+      },
+      {
+        url: "/gallery/golam-crime-scene.jpg",
+        caption: "Victim crime scene aerial perspective one-sheet",
+        order: 5,
+      },
+    ],
+  },
+  {
     filmTitle: "Red Highway",
     filmSlug: "red-highway",
     genre: "Neo-Western",
     year: 2026,
     poster: "/images/films/hero.jpg",
-    order: 0,
+    order: 1,
     visible: true,
     images: [
       { url: "/images/films/hero.jpg", caption: "Official key art and title frame", order: 1 },

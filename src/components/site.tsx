@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import logo from "@/assets/icon.png";
 import { useLikes } from "@/lib/likes";
-import type { Film } from "@/lib/films";
+import { getTrailerEmbedUrl, isDirectVideoUrl, type Film } from "@/lib/films";
 import { useFilmLookup, useFilms, useNavigation, useSettings } from "@/lib/content";
 import { buildNavItems, type MenuSubcategory, type NavMenuItem } from "@/lib/navigation";
 
@@ -237,12 +237,15 @@ export function SiteHeader() {
                         onClick={() => setLikesOpen(false)}
                         className="flex flex-1 items-center gap-3 transition-colors hover:text-neon-ink"
                       >
-                        <img
-                          src={f.poster}
-                          alt=""
-                          loading="lazy"
-                          className="h-16 w-11 shrink-0 rounded-md object-cover"
-                        />
+                        <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded-md bg-neutral-950 flex items-center justify-center">
+                          {(f.poster || f.banner || f.still) && (
+                            <SmartRailImage
+                              src={f.poster || f.banner || f.still || ""}
+                              alt=""
+                              orientation="portrait"
+                            />
+                          )}
+                        </div>
                         <span className="min-w-0">
                           <span className="block truncate font-display text-lg">{f.title}</span>
                           <span className="block font-sans text-[11px] font-semibold uppercase tracking-tight text-muted-foreground">
@@ -819,6 +822,94 @@ export function PageTitle({
   );
 }
 
+/**
+ * Hook to detect an image's natural aspect ratio and orientation.
+ * Returns ratio (w/h), isPortrait, and isLandscape.
+ */
+export function useImageRatio(src?: string) {
+  const [info, setInfo] = useState<{
+    ratio: number | null;
+    isPortrait: boolean;
+    isLandscape: boolean;
+  }>({
+    ratio: null,
+    isPortrait: false,
+    isLandscape: true,
+  });
+
+  useEffect(() => {
+    if (!src) return;
+    const img = new Image();
+    img.src = src;
+    const evaluate = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        const r = img.naturalWidth / img.naturalHeight;
+        setInfo({
+          ratio: r,
+          isPortrait: r < 0.95,
+          isLandscape: r >= 0.95,
+        });
+      }
+    };
+    if (img.complete && img.naturalWidth) {
+      evaluate();
+    } else {
+      img.onload = evaluate;
+    }
+  }, [src]);
+
+  return info;
+}
+
+/**
+ * Smart image component that prevents unwanted cropping and distortions.
+ * When portrait images are placed into widescreen frames (or vice versa),
+ * it displays the full image with object-contain over a subtle ambient
+ * blurred backdrop derived from the image itself.
+ */
+export function SmartRailImage({
+  src,
+  alt = "",
+  loading = "lazy",
+  className = "",
+  orientation = "landscape",
+}: {
+  src: string;
+  alt?: string;
+  loading?: "eager" | "lazy";
+  className?: string;
+  orientation?: "landscape" | "portrait";
+}) {
+  const { ratio, isPortrait } = useImageRatio(src);
+  const useContain =
+    ratio === null
+      ? false
+      : orientation === "landscape"
+      ? isPortrait
+      : !isPortrait;
+  return (
+    <>
+      {/* Ambient background glow to eliminate empty harsh letterbox borders */}
+      <img
+        src={src}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover object-center blur-lg opacity-35 scale-110 pointer-events-none select-none"
+      />
+      {/* Crisp foreground image */}
+      <img
+        src={src}
+        alt={alt}
+        loading={loading}
+        decoding="async"
+        className={`relative z-0 h-full w-full max-h-full max-w-full ${
+          useContain ? "object-contain" : "object-cover"
+        } object-center transition-transform duration-[1.2s] ease-out group-hover:scale-105 ${className}`}
+      />
+    </>
+  );
+}
+
 export function FilmCard({
   film,
   index = 0,
@@ -831,27 +922,47 @@ export function FilmCard({
   aspect?: string;
 }) {
   const ratio = aspect ?? (tall ? "aspect-[4/5]" : "aspect-[4/3]");
+  const containerIsPortrait = ratio.includes("4/5") || ratio.includes("2/3");
+  const displaySrc = containerIsPortrait
+    ? film.poster || film.banner || film.still
+    : film.still || film.banner || film.poster;
+  const { ratio: imgRatio, isPortrait } = useImageRatio(displaySrc);
+  const useContain =
+    imgRatio === null
+      ? !containerIsPortrait && !film.still && !film.banner
+      : (containerIsPortrait && !isPortrait) || (!containerIsPortrait && isPortrait);
+
   return (
     <Reveal delay={(index % 3) * 0.08}>
       <Link to={`/films/${film.slug}`} className="group block">
-        <div className={`relative overflow-hidden rounded-2xl bg-card ${ratio}`}>
+        <div className={`relative overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center ${ratio}`}>
+          {/* Ambient blurred backdrop so any uploaded image aspect ratio blends seamlessly */}
           <img
-            src={film.poster}
+            src={displaySrc}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover object-center blur-2xl opacity-40 scale-110 pointer-events-none select-none"
+          />
+          {/* Crisp foreground image: automatically adapts between cover and contain without distortion */}
+          <img
+            src={displaySrc}
             alt={film.title}
             loading="lazy"
             decoding="async"
-            className="h-full w-full object-cover grayscale-[30%] transition-all duration-[1.2s] ease-out group-hover:scale-110 group-hover:grayscale-0"
+            className={`relative z-0 h-full w-full max-h-full max-w-full ${
+              useContain ? "object-contain" : "object-cover"
+            } object-center grayscale-[20%] transition-all duration-[1.2s] ease-out group-hover:scale-105 group-hover:grayscale-0`}
           />
-          <div className="absolute inset-0 scrim-b opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
+          <div className="absolute inset-0 scrim-b opacity-80 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
           <div className="absolute left-4 top-4 font-sans text-[11px] font-bold uppercase tracking-tight text-white/90">
             {String(index + 1).padStart(2, "0")} / {film.genre}
           </div>
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 group-hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 group-hover:opacity-100 pointer-events-none">
             <span className="flex h-20 w-20 scale-50 items-center justify-center rounded-full bg-neon font-sans text-xs font-bold uppercase tracking-tight text-primary-foreground transition-transform duration-500 group-hover:scale-100">
               View
             </span>
           </div>
-          <div className="absolute inset-x-4 bottom-4">
+          <div className="absolute inset-x-4 bottom-4 pointer-events-none">
             <h3 className="font-display text-3xl text-white transition-colors duration-300 group-hover:text-neon md:text-4xl">
               {film.title}
             </h3>
@@ -875,16 +986,23 @@ export function TrailerModal({
   onClose: () => void;
 }) {
   const [t, setT] = useState(0);
+  const hasDirectVideo = isDirectVideoUrl(film.trailer);
+  const embedUrl = !hasDirectVideo ? getTrailerEmbedUrl(film.trailer) : null;
+  const hasVideoPlayer = hasDirectVideo || Boolean(embedUrl);
+
   useEffect(() => {
-    if (!open) return setT(0);
+    if (!open || hasVideoPlayer) return setT(0);
     const id = setInterval(() => setT((x) => (x >= 100 ? 0 : x + 0.5)), 60);
+    return () => clearInterval(id);
+  }, [open, hasVideoPlayer]);
+
+  useEffect(() => {
+    if (!open) return;
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
-    return () => {
-      clearInterval(id);
-      window.removeEventListener("keydown", esc);
-    };
+    return () => window.removeEventListener("keydown", esc);
   }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -904,33 +1022,58 @@ export function TrailerModal({
             role="dialog"
             aria-modal="true"
             aria-label={`Trailer — ${film.title}`}
-            className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-2xl bg-card"
+            className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-2xl bg-black shadow-2xl"
           >
-            <img
-              src={film.poster}
-              alt=""
-              className="kenburns absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="absolute inset-x-0 top-0 h-[10%] bg-scrim" />
-            <div className="absolute inset-x-0 bottom-0 h-[10%] bg-scrim" />
-            <motion.p
-              key={Math.floor(t / 25)}
-              initial={{ opacity: 0, letterSpacing: "0.5em" }}
-              animate={{ opacity: 1, letterSpacing: "0.05em" }}
-              transition={{ duration: 1.2 }}
-              className="absolute inset-0 flex items-center justify-center p-4 text-center font-display text-2xl sm:text-4xl md:text-6xl lg:text-8xl"
-            >
-              {[film.tagline, film.title, film.laurels[0], film.release][Math.floor(t / 25) % 4]}
-            </motion.p>
-            <div className="absolute inset-x-4 bottom-3 flex items-center gap-2 font-mono text-[9px] uppercase tracking-wider text-white sm:inset-x-6 sm:bottom-[3%] sm:gap-4 sm:text-[10px] sm:tracking-widest">
-              <span className="truncate max-w-[160px] sm:max-w-none">Trailer — {film.title}</span>
-              <div className="h-px flex-1 bg-white/25">
-                <div className="h-px bg-neon" style={{ width: `${t}%` }} />
-              </div>
-            </div>
+            {hasDirectVideo ? (
+              <video
+                key={film.trailer}
+                src={film.trailer}
+                poster={film.still || film.banner || film.poster}
+                controls
+                autoPlay
+                playsInline
+                className="h-full w-full bg-black object-contain"
+              />
+            ) : embedUrl ? (
+              <iframe
+                key={embedUrl}
+                src={embedUrl}
+                title={`Trailer — ${film.title}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full border-0 bg-black"
+              />
+            ) : (
+              <>
+                <div className="absolute inset-0 flex items-center justify-center bg-neutral-950">
+                  <SmartRailImage
+                    src={film.still || film.banner || film.poster}
+                    alt=""
+                    className="kenburns"
+                  />
+                </div>
+                <div className="absolute inset-x-0 top-0 h-[10%] bg-scrim" />
+                <div className="absolute inset-x-0 bottom-0 h-[10%] bg-scrim" />
+                <motion.p
+                  key={Math.floor(t / 25)}
+                  initial={{ opacity: 0, letterSpacing: "0.5em" }}
+                  animate={{ opacity: 1, letterSpacing: "0.05em" }}
+                  transition={{ duration: 1.2 }}
+                  className="absolute inset-0 flex items-center justify-center p-4 text-center font-display text-2xl sm:text-4xl md:text-6xl lg:text-8xl"
+                >
+                  {[film.tagline, film.title, film.laurels[0], film.release][Math.floor(t / 25) % 4]}
+                </motion.p>
+                <div className="absolute inset-x-4 bottom-3 flex items-center gap-2 font-mono text-[9px] uppercase tracking-wider text-white sm:inset-x-6 sm:bottom-[3%] sm:gap-4 sm:text-[10px] sm:tracking-widest">
+                  <span className="truncate max-w-[160px] sm:max-w-none">Trailer — {film.title}</span>
+                  <div className="h-px flex-1 bg-white/25">
+                    <div className="h-px bg-neon" style={{ width: `${t}%` }} />
+                  </div>
+                </div>
+              </>
+            )}
             <button
               onClick={onClose}
-              className="absolute right-3 top-2 font-mono text-[10px] uppercase tracking-wider text-white hover:text-neon sm:right-4 sm:top-[2%] sm:text-xs sm:tracking-widest"
+              className="absolute right-3 top-3 z-20 rounded-full bg-black/70 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-white backdrop-blur transition-colors hover:text-neon sm:right-4 sm:top-4 sm:text-xs sm:tracking-widest"
             >
               Close ✕
             </button>

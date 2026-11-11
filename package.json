@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite dev",
     "backend": "node --watch backend/index.js",
+    "server": "node --watch backend/index.js",
+    "api": "node --watch backend/index.js",
+    "start": "node backend/index.js",
     "dev:all": "concurrently -n web,api -c green,cyan \"npm:dev\" \"npm:backend\"",
     "seed": "node backend/seed/index.js",
     "build": "vite build",

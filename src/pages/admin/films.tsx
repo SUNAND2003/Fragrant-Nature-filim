@@ -17,6 +17,7 @@ import {
   SwitchInput,
   TextArea,
   TextInput,
+  VideoPicker,
   reportError,
 } from "@/pages/admin/ui";
 
@@ -44,6 +45,9 @@ type FilmForm = {
   featured: boolean;
   screenRequest: boolean;
   poster: string;
+  banner: string;
+  still: string;
+  comingSoonBanner: string;
 };
 
 const empty: FilmForm = {
@@ -68,6 +72,9 @@ const empty: FilmForm = {
   featured: false,
   screenRequest: true,
   poster: "",
+  banner: "",
+  still: "",
+  comingSoonBanner: "",
 };
 
 const statusOptions = [
@@ -181,6 +188,9 @@ export function FilmsSection() {
       featured: film.featured ?? false,
       screenRequest: film.screenRequest ?? true,
       poster: film.poster,
+      banner: film.banner ?? "",
+      still: film.still ?? "",
+      comingSoonBanner: film.comingSoonBanner ?? "",
     });
   };
 
@@ -213,6 +223,9 @@ export function FilmsSection() {
         screenRequest: form.screenRequest,
         order: Number(form.order) || 0,
         poster: form.poster.trim(),
+        banner: form.banner.trim(),
+        still: form.still.trim(),
+        comingSoonBanner: form.comingSoonBanner.trim(),
       };
       if (editingId) {
         await api.put(`/api/films/${editingId}`, payload, { auth: true });
@@ -479,28 +492,86 @@ export function FilmsSection() {
             </Field>
           </div>
 
-          <Field label="Trailer" htmlFor="film-trailer">
-            <TextInput
+          <Field
+            label="Trailer (URL or Upload MP4)"
+            htmlFor="film-trailer"
+            hint="Paste a YouTube / Vimeo / direct MP4 URL, or click Upload MP4 to upload a local video file."
+          >
+            <VideoPicker
               id="film-trailer"
-              type="url"
+              label="Trailer"
               value={form.trailer}
-              onChange={(event) => setForm({ ...form, trailer: event.target.value })}
-              placeholder="https://www.youtube.com/watch?v=…"
+              onChange={(trailer) => setForm({ ...form, trailer })}
             />
           </Field>
 
-          <Field
-            label="Poster"
-            hint="Recommended size: 1200 × 1800 px (2:3 portrait aspect ratio). Optimal formats: JPG, PNG, WebP."
-          >
-            <ImagePicker
-              value={form.poster}
-              onChange={(poster) => setForm({ ...form, poster })}
-              kind="poster"
-              label="Poster"
-              recommendedSize="1200 × 1800 px (2:3 portrait)"
-            />
-          </Field>
+          <div className="space-y-4 border border-border/80 bg-background/40 p-4">
+            <div className="border-b border-border pb-2.5">
+              <p className="font-display text-sm uppercase tracking-wider text-foreground">
+                Artwork by Display Area
+              </p>
+              <p className="mt-0.5 font-sans text-[11px] text-muted-foreground">
+                Upload area-specific artwork to avoid cropping issues. Banner &amp; still slots fall back to the poster if left empty.
+              </p>
+            </div>
+
+            <Field
+              label="1. Theatrical Poster (Portrait Card & Catalog)"
+              hint="Used in: Films catalog (/films), Now Showing grid, Award Winners, and Movie Cards."
+            >
+              <ImagePicker
+                value={form.poster}
+                onChange={(poster) => setForm({ ...form, poster })}
+                kind="poster"
+                label="Theatrical Poster"
+                recommendedSize="1000 × 1500 px (2:3 portrait)"
+              />
+            </Field>
+
+            <div className="border-t border-border/60 pt-4">
+              <Field
+                label="2. Hero Banner / Backdrop (Full-screen Carousel)"
+                hint="Used in: Home Page Hero Carousel & Film Page top backdrop. Wide landscape prevents vertical cropping."
+              >
+                <ImagePicker
+                  value={form.banner}
+                  onChange={(banner) => setForm({ ...form, banner })}
+                  kind="banner"
+                  label="Hero Banner"
+                  recommendedSize="1920 × 1080 px (16:9) or 2048 × 930 px (21:9)"
+                />
+              </Field>
+            </div>
+
+            <div className="border-t border-border/60 pt-4">
+              <Field
+                label="3. Video Still / Rail Thumbnail (Watch Now)"
+                hint="Used in: Home Page 'Watch Now' horizontal preview rail and trailer previews."
+              >
+                <ImagePicker
+                  value={form.still}
+                  onChange={(still) => setForm({ ...form, still })}
+                  kind="still"
+                  label="Video Still"
+                  recommendedSize="1280 × 720 px (16:9 widescreen)"
+                />
+              </Field>
+            </div>
+            <div className="border-t border-border/60 pt-4">
+              <Field
+                label="4. Coming Soon Section Poster (2:3 Normal Poster)"
+                hint="Used ONLY in: Home Page dark 'Coming soon' showcase stage (when Status is Upcoming). Leave empty to fall back to the film's poster."
+              >
+                <ImagePicker
+                  value={form.comingSoonBanner}
+                  onChange={(comingSoonBanner) => setForm({ ...form, comingSoonBanner })}
+                  kind="coming-soon"
+                  label="Coming Soon Poster"
+                  recommendedSize="1000 × 1500 px (2:3 poster)"
+                />
+              </Field>
+            </div>
+          </div>
 
           <div className="grid gap-3">
             <SwitchInput
@@ -548,13 +619,13 @@ export function FilmsSection() {
                   className="flex flex-wrap items-center justify-between gap-4 border border-border bg-card px-4 py-3"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="h-20 w-14 shrink-0 overflow-hidden border border-border bg-muted">
+                    <div className="h-20 w-14 shrink-0 overflow-hidden border border-border bg-neutral-950 flex items-center justify-center">
                       {film.poster ? (
                         <img
                           src={film.poster}
                           alt=""
                           loading="lazy"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover object-center"
                         />
                       ) : (
                         <span className="flex h-full w-full items-center justify-center text-center font-sans text-[9px] uppercase tracking-widest text-muted-foreground">
@@ -589,6 +660,26 @@ export function FilmsSection() {
                         ) : (
                           <span className="border border-border px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                             Screen Request OFF
+                          </span>
+                        )}
+                        {film.banner && (
+                          <span className="border border-sky-500/40 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-sky-400">
+                            Banner
+                          </span>
+                        )}
+                        {film.still && (
+                          <span className="border border-purple-500/40 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-purple-400">
+                            Still
+                          </span>
+                        )}
+                        {film.comingSoonBanner && (
+                          <span className="border border-cyan-500/40 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-cyan-400">
+                            Coming Soon
+                          </span>
+                        )}
+                        {film.trailer && (
+                          <span className="border border-amber-500/40 px-1.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                            Trailer
                           </span>
                         )}
                       </div>

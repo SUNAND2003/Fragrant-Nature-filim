@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useFilms } from "@/lib/content";
 import type { Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
+import { PageTitle, PlayButton, Reveal, ScreenRequestButton, SmartRailImage, TrailerModal } from "@/components/site";
 
 export function UpcomingPage() {
   usePageMeta({
@@ -24,15 +24,15 @@ export function UpcomingPage() {
             key={f.slug}
             className={`grid items-center justify-items-center gap-10 md:grid-cols-2 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}
           >
-            <Reveal>
-              <div className="group relative aspect-[4/5] max-w-[480px] overflow-hidden rounded-2xl">
-                <img
-                  src={f.poster}
+            <Reveal className="w-full max-w-[480px]">
+              <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                <SmartRailImage
+                  src={f.poster || f.banner || f.still || ""}
                   alt={f.title}
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-[1.5s] group-hover:scale-110"
+                  orientation="portrait"
                 />
-                <div className="absolute left-4 top-4 rounded-full bg-neon-ink px-3.5 py-1.5 font-sans text-[11px] font-bold uppercase tracking-tight text-white shadow-lg">
+                <div className="absolute left-4 top-4 rounded-full bg-neon-ink px-3.5 py-1.5 font-sans text-[11px] font-bold uppercase tracking-tight text-white shadow-lg z-10">
                   {f.release}
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { formatZodError } from "../lib/validate.js";
+import { MAX_UPLOAD_MB } from "./upload.js";
 
 export function notFound(req, res) {
   res.status(404).json({ error: "Not found" });
@@ -25,7 +26,8 @@ function mapError(err) {
     return { status: 400, message: `Invalid value for "${err.path}"` };
   }
   if (err.name === "MulterError") {
-    const message = err.code === "LIMIT_FILE_SIZE" ? "File exceeds the 10 MB limit" : err.message;
+    const message =
+      err.code === "LIMIT_FILE_SIZE" ? `File exceeds the ${MAX_UPLOAD_MB} MB limit` : err.message;
     return { status: 400, message };
   }
   if (err.code === 11000) {

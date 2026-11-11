@@ -36,6 +36,10 @@ type ImageFormState = {
   caption: string;
 };
 
+const IMAGE_EXT_RX = /\.(jpe?g|png|webp|gif|avif|svg|bmp|ico|heic|heif)$/i;
+const isImageFile = (file: File) =>
+  file.type.startsWith("image/") || IMAGE_EXT_RX.test(file.name);
+
 const emptyImage: ImageFormState = { url: "", caption: "" };
 
 const emptyForm = {
@@ -159,7 +163,7 @@ export function GallerySection() {
   // Upload multiple images directly into the current form set
   const handleUploadMultiple = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const list = Array.from(files).filter(isImageFile);
     if (list.length === 0) {
       toast.error("Please select valid image files");
       return;
@@ -204,7 +208,7 @@ export function GallerySection() {
   // Upload single photo into newImage
   const handleUploadSingle = async (file?: File) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!isImageFile(file)) {
       toast.error("Please select a valid image file");
       return;
     }
@@ -233,7 +237,7 @@ export function GallerySection() {
   // Upload poster
   const handleUploadPoster = async (file?: File) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!isImageFile(file)) {
       toast.error("Please select a valid image file");
       return;
     }
@@ -253,7 +257,7 @@ export function GallerySection() {
   // Quick card upload
   const handleQuickUpload = async (file?: File) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!isImageFile(file)) {
       toast.error("Please select a valid image file");
       return;
     }
@@ -545,7 +549,7 @@ export function GallerySection() {
                   <input
                     ref={posterFileRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml,image/*"
                     className="hidden"
                     onChange={(e) => void handleUploadPoster(e.target.files?.[0])}
                   />
@@ -566,6 +570,25 @@ export function GallerySection() {
                     Upload
                   </Button>
                 </div>
+                {form.poster && (
+                  <div className="flex items-center gap-3 rounded border border-neutral-300 bg-neutral-100 p-2">
+                    <div className="relative aspect-[2/3] h-14 overflow-hidden rounded bg-black shrink-0">
+                      <img
+                        src={form.poster}
+                        alt="Poster preview"
+                        className="h-full w-full object-cover object-center"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-mono text-[11px] text-neutral-800">
+                        {form.poster}
+                      </p>
+                      <p className="font-sans text-[10px] text-muted-foreground">
+                        Cover art active
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
                   <span className="font-semibold uppercase tracking-wider text-[10px]">Perfect size:</span>
                   <span className="rounded border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 font-bold text-neutral-800">
@@ -609,7 +632,7 @@ export function GallerySection() {
                   ref={multiFileRef}
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml,image/*"
                   className="hidden"
                   onChange={(e) => void handleUploadMultiple(e.target.files)}
                 />
@@ -661,7 +684,7 @@ export function GallerySection() {
                     <img
                       src={img.url}
                       alt={img.caption || `Photo ${index + 1}`}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      className="h-full w-full object-cover object-center transition-transform group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                       <button
@@ -707,7 +730,7 @@ export function GallerySection() {
                 <input
                   ref={singleFileRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml,image/*"
                   className="hidden"
                   onChange={(e) => void handleUploadSingle(e.target.files?.[0])}
                 />
@@ -733,7 +756,7 @@ export function GallerySection() {
               {newImage.url && (
                 <div className="flex items-center gap-3 rounded border border-neutral-300 bg-neutral-100 p-2">
                   <div className="relative aspect-[16/10] h-12 overflow-hidden rounded bg-black shrink-0">
-                    <img src={newImage.url} alt="Preview" className="h-full w-full object-cover" />
+                    <img src={newImage.url} alt="Preview" className="h-full w-full object-cover object-center" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-mono text-[11px] text-neutral-800">
@@ -995,7 +1018,7 @@ export function GallerySection() {
                         <input
                           ref={quickFileRef}
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml,image/*"
                           className="hidden"
                           onChange={(e) => void handleQuickUpload(e.target.files?.[0])}
                         />
@@ -1055,7 +1078,7 @@ export function GallerySection() {
                           <img
                             src={img.url}
                             alt={img.caption || `Photo ${imgIdx + 1}`}
-                            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                            className="h-full w-full object-cover object-center transition-transform group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <button

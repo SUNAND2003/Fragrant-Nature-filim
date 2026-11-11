@@ -180,7 +180,7 @@ export function CategoriesSection() {
     setEditingSubId(sub._id);
     setSubForm({
       name: sub.name,
-      category: typeof sub.category === "object" ? sub.category?._id : sub.category,
+      category: (typeof sub.category === "object" ? sub.category?._id : sub.category) ?? "",
       order: sub.order ?? 0,
     });
     setParams({ tab: "subcategories", editSub: sub._id });

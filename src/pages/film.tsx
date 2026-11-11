@@ -3,8 +3,34 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 
 import { useFilmBySlug, useFilms } from "@/lib/content";
+import type { Film } from "@/lib/films";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { FilmCard, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
+import { FilmCard, PlayButton, Reveal, ScreenRequestButton, TrailerModal, useImageRatio } from "@/components/site";
+
+function FilmHeroArtwork({ film }: { film: Film }) {
+  const imageSrc = film.banner || film.poster;
+  return (
+    <>
+      <img
+        src={imageSrc}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover object-center scale-110 blur-3xl opacity-35 brightness-50 select-none pointer-events-none"
+      />
+      <motion.img
+        key={film.slug}
+        src={imageSrc}
+        alt={film.title}
+        fetchPriority="high"
+        decoding="async"
+        initial={{ scale: 1.15, filter: "blur(20px)" }}
+        animate={{ scale: 1.02, filter: "blur(0px)" }}
+        transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+    </>
+  );
+}
 
 function FilmNotFound() {
   return (
@@ -38,20 +64,11 @@ export function FilmPage() {
   return (
     <>
       <section className="theme-dark relative h-[100svh] overflow-hidden bg-background text-foreground">
-        <motion.img
-          key={film.slug}
-          src={film.poster}
-          alt={film.title}
-          fetchPriority="high"
-          decoding="async"
-          initial={{ scale: 1.3, filter: "blur(20px)" }}
-          animate={{ scale: 1.05, filter: "blur(0px)" }}
-          transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 scrim-b" />
+        <FilmHeroArtwork film={film} />
+        <div className="pointer-events-none absolute inset-0 scrim-b" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-scrim/80 via-scrim/40 to-transparent" />
         <div className="relative flex h-full flex-col justify-end px-5 pb-14 md:px-10">
-          <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
+          <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
             {film.genre} · {film.year} · {film.runtime} · {film.rating}
           </p>
           {(film.category || (film.subcategories?.length ?? 0) > 0) && (
@@ -75,7 +92,7 @@ export function FilmPage() {
               ))}
             </div>
           )}
-          <h1 className="mt-4 overflow-hidden font-display text-[clamp(2.8rem,14vw,8rem)] text-white md:text-[clamp(4.5rem,10vw,10.5rem)] leading-[0.84]">
+          <h1 className="mt-4 overflow-hidden font-display text-[clamp(2.8rem,14vw,8rem)] text-white md:text-[clamp(4.5rem,10vw,10.5rem)] leading-[0.84] drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
             <motion.span
               className="block"
               initial={{ y: "100%" }}

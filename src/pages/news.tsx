@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { useNews } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, Reveal } from "@/components/site";
+import { PageTitle, Reveal, SmartRailImage } from "@/components/site";
 
 export function NewsPage() {
   usePageMeta({
@@ -42,13 +42,12 @@ export function NewsPage() {
                 : ""
             }`}
           >
-            <div className="aspect-video overflow-hidden rounded-2xl">
-              <img
+            <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+              <SmartRailImage
                 src={lead.image}
                 alt={lead.title}
                 loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="transition-transform duration-700 group-hover:scale-105"
               />
             </div>
             <div className="flex flex-col justify-center">
@@ -86,13 +85,14 @@ export function NewsPage() {
                 {n.title}
               </h3>
               <div className="hidden md:col-span-2 md:block md:justify-self-end">
-                <img
-                  src={n.image}
-                  alt={n.title}
-                  loading="lazy"
-                  decoding="async"
-                  className="pointer-events-none h-28 w-20 rotate-6 object-cover opacity-0 transition-all duration-500 group-hover:rotate-0 group-hover:opacity-100"
-                />
+                <div className="pointer-events-none relative h-28 w-20 overflow-hidden rounded-lg bg-neutral-950 flex items-center justify-center shadow-md rotate-6 opacity-0 transition-all duration-500 group-hover:rotate-0 group-hover:opacity-100">
+                  <SmartRailImage
+                    src={n.image}
+                    alt={n.title}
+                    loading="lazy"
+                    orientation="portrait"
+                  />
+                </div>
               </div>
             </Link>
           </Reveal>

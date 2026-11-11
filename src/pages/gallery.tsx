@@ -5,7 +5,7 @@ import { Link } from "react-router";
 import type { Film } from "@/lib/films";
 import { useFilms, useGallery } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { PageTitle, Reveal } from "@/components/site";
+import { PageTitle, Reveal, SmartRailImage } from "@/components/site";
 
 type Frame = { src: string; pos: string; ratio: string; no: string };
 
@@ -149,16 +149,14 @@ export function GalleryPage() {
                   type="button"
                   onClick={() => setOpen({ set: si, frame: fi })}
                   aria-label={`Open ${s.film.title} photo ${fr.no}`}
-                  className={`group relative block h-full w-full overflow-hidden rounded-2xl bg-card ${fr.ratio}`}
+                  className={`group relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-neutral-950 ${fr.ratio}`}
                 >
-                  <img
+                  <SmartRailImage
                     src={fr.src}
                     alt={`${s.film.title} — photo ${fr.no}`}
                     loading="lazy"
-                    decoding="async"
-                    className={`h-full w-full object-cover ${fr.pos} transition-transform duration-[1.2s] ease-out group-hover:scale-105`}
                   />
-                  <div className="absolute inset-0 scrim-b opacity-60 transition-opacity duration-500 group-hover:opacity-90" />
+                  <div className="absolute inset-0 scrim-b opacity-60 transition-opacity duration-500 group-hover:opacity-90 pointer-events-none" />
                   <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-tight text-white backdrop-blur">
                     {fr.no}
                   </span>
@@ -260,12 +258,12 @@ export function GalleryPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className={`relative max-h-[75vh] w-auto max-w-[82vw] overflow-hidden rounded-2xl sm:max-w-[88vw] md:max-w-4xl ${frame.ratio}`}
+              className="relative max-h-[78vh] max-w-[90vw] overflow-hidden rounded-2xl bg-black/85 flex items-center justify-center p-1.5 sm:p-3 shadow-2xl"
             >
               <img
                 src={frame.src}
                 alt={`${active.film.title} — photo ${frame.no}`}
-                className={`h-full w-full object-cover ${frame.pos}`}
+                className="max-h-[74vh] max-w-[86vw] h-auto w-auto object-contain object-center rounded-lg select-none"
               />
             </motion.div>
 

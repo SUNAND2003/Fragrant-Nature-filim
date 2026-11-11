@@ -136,7 +136,7 @@ export function ContactPage() {
             src={heroImage}
             alt=""
             aria-hidden
-            className="kenburns h-full w-full object-cover opacity-60"
+            className="kenburns h-full w-full object-cover object-center opacity-60"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12">

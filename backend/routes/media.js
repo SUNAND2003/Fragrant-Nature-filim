@@ -6,7 +6,7 @@ import { upload } from "../middleware/upload.js";
 
 const router = Router();
 
-const KINDS = ["poster", "news", "gallery", "misc"];
+const KINDS = ["poster", "banner", "still", "coming-soon", "news", "gallery", "video", "misc"];
 
 async function handleUpload(req, res) {
   if (!req.file) {
@@ -38,7 +38,7 @@ router.get("/", requireAdmin, async (req, res) => {
 router.delete("/:id", requireAdmin, async (req, res) => {
   const media = await Media.findById(req.params.id);
   if (!media) return res.status(404).json({ error: "Media not found" });
-  await destroyStorage(media.publicId);
+  await destroyStorage(media.publicId, media.resourceType || "image");
   await media.deleteOne();
   return res.json({ ok: true });
 });

@@ -1,4 +1,5 @@
 import hero from "@/assets/hero.jpg";
+import golam from "@/assets/golam.jpg";
 import p1 from "@/assets/p1.jpg";
 import p2 from "@/assets/p2.jpg";
 import p3 from "@/assets/p3.jpg";
@@ -35,6 +36,16 @@ export type Film = {
   runtime: string;
   rating: string;
   poster: string;
+  posterPublicId?: string;
+  /** Landscape hero banner / backdrop for full-screen carousel & headers (16:9 / 21:9). */
+  banner?: string;
+  bannerPublicId?: string;
+  /** Horizontal still / thumbnail for Watch Now rail and previews (16:9). */
+  still?: string;
+  stillPublicId?: string;
+  /** Poster exclusively for Home page Coming Soon showcase stage (2:3 normal poster size). */
+  comingSoonBanner?: string;
+  comingSoonBannerPublicId?: string;
   tagline: string;
   synopsis: string;
   cast: string[];
@@ -78,6 +89,33 @@ export type GalleryItem = {
 export const heroImage = hero;
 
 export const films: Film[] = [
+  {
+    slug: "golam",
+    title: "Golam",
+    director: "Samjad",
+    year: 2024,
+    genre: "Thriller",
+    runtime: "2h 05m",
+    rating: "U/A",
+    poster: golam,
+    tagline: "Behind closed doors, the truth lies in the details.",
+    synopsis:
+      "When a successful corporate executive dies under mysterious circumstances in an office washroom, an astute young police officer must navigate corporate secrecy, shifting alibis, and high-tech forensics to uncover the elusive truth.",
+    cast: [
+      "Ranjith Sajeev",
+      "Dileesh Pothan",
+      "Sunny Wayne",
+      "Chinnu Chandni",
+      "Siddique",
+      "Alencier Ley Lopez",
+    ],
+    status: "now",
+    release: "In theaters June 07, 2024 · Streaming now",
+    laurels: ["Fragrant Nature Production", "Critics Choice — Best Investigative Thriller"],
+    accent: "#E0A93B",
+    screenRequest: true,
+    featured: true,
+  },
   {
     slug: "red-highway",
     title: "Red Highway",
@@ -233,6 +271,27 @@ export type NewsArticle = {
 
 export const news: NewsArticle[] = [
   {
+    id: 6,
+    date: "Jun 07, 2024",
+    tag: "Release",
+    title: "Golam: Inside the locked-room phenomenon",
+    excerpt:
+      "Samjad's pulse-pounding investigative thriller starring Ranjith Sajeev, Dileesh Pothan, and Sunny Wayne opens worldwide.",
+    image: golam,
+    author: "Studio Editorial",
+    readTime: "4 min read",
+    filmSlug: "golam",
+    content: [
+      "Fragrant Nature Film Creations is proud to announce the worldwide theatrical release of 'Golam' (ഗോളം), directed by Samjad and produced by Anne & Sajeev.",
+      "Starring Ranjith Sajeev in a standout turn as an investigative officer alongside Dileesh Pothan, Sunny Wayne, Chinnu Chandni, Siddique, and Alencier Ley Lopez, the locked-room mystery weaves tight forensic tension with layered corporate suspense.",
+      "Written by Praveen Viswanath and Samjad, with music by Aby Salvin Thomas and cinematography by Vijay, 'Golam' marks a striking new milestone for Fragrant Nature's dedication to boundary-pushing cinema.",
+    ],
+    quote: {
+      text: "Behind closed doors, the truth lies in the details that everyone else overlooked.",
+      author: "Samjad, Director",
+    },
+  },
+  {
     id: 1,
     date: "Oct 18, 2026",
     tag: "Awards",
@@ -355,6 +414,16 @@ export type Award = {
 
 export const awardsList: Award[] = [
   {
+    id: "critics-choice-golam",
+    festival: "Kerala Film Critics Association",
+    award: "Best Investigative Thriller & Special Jury Honor",
+    year: 2024,
+    filmSlug: "golam",
+    category: "Major Prize",
+    citation:
+      "Awarded for exceptional locked-room narrative tension, forensic precision, and standout ensemble performances.",
+  },
+  {
     id: "sundance-drown",
     festival: "Sundance Film Festival",
     award: "Grand Jury Prize — U.S. Dramatic",
@@ -422,3 +491,48 @@ export const awardsList: Award[] = [
       "Celebrated as a kinetic, sun-drenched indie anthem capturing the bittersweet rush of youth.",
   },
 ];
+
+/** True when a trailer string points directly to an uploaded or hosted video file (MP4/WebM/MOV/M4V/OGV). */
+export function isDirectVideoUrl(url?: string): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  return (
+    /\.(mp4|webm|mov|m4v|ogv)(?:[?#].*)?$/i.test(trimmed) ||
+    /\/video\/upload\//i.test(trimmed)
+  );
+}
+
+/** Converts YouTube or Vimeo watch links into an embeddable player URL. Returns null for unknown URLs. */
+export function getTrailerEmbedUrl(url?: string): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed, "https://example.invalid");
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = parsed.pathname.split("/").filter(Boolean)[0];
+      if (id && /^[a-zA-Z0-9_-]{6,20}$/.test(id)) {
+        return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+    }
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      const id =
+        parsed.searchParams.get("v") ||
+        (parts[0] === "embed" || parts[0] === "shorts" ? parts[1] : null);
+      if (id && /^[a-zA-Z0-9_-]{6,20}$/.test(id)) {
+        return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+    }
+    if (host === "vimeo.com" || host === "player.vimeo.com") {
+      const match = parsed.pathname.match(/\/(?:video\/)?(\d{5,15})/);
+      if (match?.[1]) {
+        return `https://player.vimeo.com/video/${match[1]}?autoplay=1`;
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}

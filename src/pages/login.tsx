@@ -20,7 +20,7 @@ type FormValues = z.infer<typeof schema>;
 /** Shared left-hand cinematic panel so both states (signed out / signed in) match. */
 function Entrance() {
   return (
-    <div className="relative h-[34svh] overflow-hidden md:h-auto">
+    <div className="relative h-[34svh] overflow-hidden md:h-auto bg-black">
       <img
         src={heroImage}
         alt=""

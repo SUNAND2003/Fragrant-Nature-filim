@@ -322,27 +322,43 @@ export function NewsSection() {
                 key={article._id}
                 className="flex flex-wrap items-center justify-between gap-4 border border-border bg-card px-4 py-3"
               >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-sans text-sm font-bold uppercase tracking-tight">
-                      {article.title}
-                    </p>
-                    {!article.published && (
-                      <span className="border border-destructive/50 bg-destructive/10 px-2 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-destructive">
-                        Draft
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="h-14 w-22 shrink-0 overflow-hidden border border-border bg-neutral-950 flex items-center justify-center rounded-xs">
+                    {article.image ? (
+                      <img
+                        src={article.image}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover object-center"
+                      />
+                    ) : (
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                        No img
                       </span>
                     )}
                   </div>
-                  <p className="font-mono text-[11px] text-muted-foreground">
-                    {article.date || "No date"} · {article.tag || "Untagged"} ·{" "}
-                    {article.author || "No author"} ·{" "}
-                    <Link
-                      to={`/news/${article.id}`}
-                      className="inline-flex items-center gap-1 text-neon-ink underline hover:text-foreground"
-                    >
-                      <ExternalLink className="h-3 w-3" /> View
-                    </Link>
-                  </p>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-sans text-sm font-bold uppercase tracking-tight">
+                        {article.title}
+                      </p>
+                      {!article.published && (
+                        <span className="border border-destructive/50 bg-destructive/10 px-2 py-0.5 font-sans text-[10px] font-bold uppercase tracking-widest text-destructive">
+                          Draft
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-mono text-[11px] text-muted-foreground">
+                      {article.date || "No date"} · {article.tag || "Untagged"} ·{" "}
+                      {article.author || "No author"} ·{" "}
+                      <Link
+                        to={`/news/${article.id}`}
+                        className="inline-flex items-center gap-1 text-neon-ink underline hover:text-foreground"
+                      >
+                        <ExternalLink className="h-3 w-3" /> View
+                      </Link>
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

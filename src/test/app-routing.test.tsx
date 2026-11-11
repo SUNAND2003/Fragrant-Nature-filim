@@ -14,7 +14,7 @@ describe("App routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: /red highway/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /golam/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /award winners/i })).toBeInTheDocument();
     expect(screen.queryByText(/page not found/i)).not.toBeInTheDocument();
   });

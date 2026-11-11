@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 import { useContent, useNewsById } from "@/lib/content";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { Reveal } from "@/components/site";
+import { Reveal, SmartRailImage } from "@/components/site";
 
 function NewsNotFound() {
   return (
@@ -87,14 +87,12 @@ export function NewsArticlePage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative mt-12 aspect-[16/9] w-full overflow-hidden rounded-3xl border border-border bg-black shadow-2xl sm:aspect-[21/9]"
+          className="relative mt-12 aspect-[16/9] w-full overflow-hidden rounded-3xl border border-border bg-neutral-950 flex items-center justify-center shadow-2xl sm:aspect-[21/9]"
         >
-          <img
+          <SmartRailImage
             src={article.image}
             alt={article.title}
-            fetchPriority="high"
-            decoding="async"
-            className="h-full w-full object-cover"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         </motion.div>
@@ -124,11 +122,13 @@ export function NewsArticlePage() {
           {connectedFilm && (
             <div className="mt-16 flex flex-col gap-6 rounded-3xl border border-border bg-card/60 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
               <div className="flex items-center gap-5">
-                <img
-                  src={connectedFilm.poster}
-                  alt={connectedFilm.title}
-                  className="h-24 w-16 rounded-xl object-cover shadow-lg"
-                />
+                <div className="relative h-24 w-16 overflow-hidden rounded-xl bg-neutral-950 flex items-center justify-center shrink-0 shadow-lg">
+                  <SmartRailImage
+                    src={connectedFilm.poster || connectedFilm.banner || connectedFilm.still || ""}
+                    alt={connectedFilm.title}
+                    orientation="portrait"
+                  />
+                </div>
                 <div>
                   <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
                     Associated Film
@@ -190,13 +190,12 @@ export function NewsArticlePage() {
           {moreArticles.map((n, i) => (
             <Reveal key={n.id} delay={i * 0.1}>
               <Link to={`/news/${n.id}`} className="group block h-full">
-                <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-black">
-                  <img
+                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                  <SmartRailImage
                     src={n.image}
                     alt={n.title}
                     loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="transition-transform duration-700 group-hover:scale-105"
                   />
                 </div>
                 <p className="mt-4 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">

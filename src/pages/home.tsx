@@ -2,9 +2,7 @@ import { Link } from "react-router";
 import {
   AnimatePresence,
   motion,
-  useMotionValue,
   useScroll,
-  useSpring,
   useTransform,
 } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
@@ -14,9 +12,51 @@ import laurelImg from "@/assets/laurel.png";
 import { useAwards, useContent, useFilmLookup, useFilms } from "@/lib/content";
 import { useLikes } from "@/lib/likes";
 import { usePageMeta } from "@/lib/use-page-meta";
-import { FilmCard, PlayButton, Reveal, ScreenRequestButton, TrailerModal } from "@/components/site";
+import { FilmCard, PlayButton, Reveal, ScreenRequestButton, SmartRailImage, TrailerModal, useImageRatio } from "@/components/site";
 
 const SLIDE_DURATION = 7000;
+
+function HeroSlideArtwork({
+  film,
+  isDriftAlt,
+  parallaxY,
+}: {
+  film: Film;
+  isDriftAlt: boolean;
+  parallaxY: any;
+}) {
+  const imageSrc = film.banner || film.poster;
+  return (
+    <motion.div
+      key={film.slug}
+      className="absolute inset-0 h-full w-full overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.2 }}
+      style={{ y: parallaxY }}
+    >
+      {/* Ambient background glow to eliminate awkward empty bars */}
+      <img
+        src={imageSrc}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover object-center scale-110 blur-3xl opacity-35 brightness-50 select-none pointer-events-none"
+      />
+
+      {/* Main hero image: uniform full container height model for all uploaded images */}
+      <img
+        src={imageSrc}
+        alt={film.title}
+        fetchPriority="high"
+        decoding="async"
+        className={`absolute inset-0 h-full w-full object-cover object-center select-none ${
+          isDriftAlt ? "hero-drift-alt" : "hero-drift"
+        }`}
+      />
+    </motion.div>
+  );
+}
 
 function HeroCarousel() {
   const films = useFilms();
@@ -33,14 +73,6 @@ function HeroCarousel() {
   const liked = likes.includes(film.slug);
 
   const sectionRef = useRef<HTMLElement>(null);
-  const [isHovering, setIsHovering] = useState(false);
-  const [isOverInteractive, setIsOverInteractive] = useState(false);
-  const [cursorDirection, setCursorDirection] = useState<"left" | "right">("right");
-
-  const mouseX = useMotionValue(-500);
-  const mouseY = useMotionValue(-500);
-  const smoothX = useSpring(mouseX, { damping: 28, stiffness: 320, mass: 0.35 });
-  const smoothY = useSpring(mouseY, { damping: 28, stiffness: 320, mass: 0.35 });
 
   // Manual navigation: jump to a specific slide or step by delta, always
   // wrapping. Bumping `nav` remounts the autoplay effect, so the timer and
@@ -53,7 +85,7 @@ function HeroCarousel() {
   // NEON-style parallax: the frame drifts slower than the page while the
   // hero scrolls away (the wrapper is oversized so no gap can appear).
   const { scrollY } = useScroll();
-  const parallaxY = useTransform(scrollY, [0, 800], [0, 70]);
+  const parallaxY = useTransform(scrollY, [0, 800], [0, 35]);
 
   // Autoplay: advance to the next slide, driving the progress bar as we go.
   useEffect(() => {
@@ -70,43 +102,6 @@ function HeroCarousel() {
     }, 50);
     return () => window.clearInterval(id);
   }, [index, nav, trailer, slides.length]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!sectionRef.current) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    const relX = e.clientX - rect.left;
-    const relY = e.clientY - rect.top;
-
-    mouseX.set(relX);
-    mouseY.set(relY);
-
-    setCursorDirection(relX >= rect.width / 2 ? "right" : "left");
-
-    const target = e.target as HTMLElement | null;
-    const isInteractive = Boolean(
-      target?.closest(
-        "button, a, input, select, textarea, [role='dialog'], [data-interactive='true']",
-      ),
-    );
-    setIsOverInteractive(isInteractive);
-  };
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
-    if (sectionRef.current) {
-      const rect = sectionRef.current.getBoundingClientRect();
-      const relX = e.clientX - rect.left;
-      const relY = e.clientY - rect.top;
-      mouseX.jump(relX);
-      mouseY.jump(relY);
-      setCursorDirection(relX >= rect.width / 2 ? "right" : "left");
-    }
-    setIsHovering(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setIsOverInteractive(false);
-  };
 
   const handleSectionClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement | null;
@@ -130,36 +125,20 @@ function HeroCarousel() {
   return (
     <section
       ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onClick={handleSectionClick}
-      className={`theme-dark relative h-[100svh] overflow-hidden bg-background text-foreground select-none ${
-        isHovering && !isOverInteractive && !trailer ? "md:cursor-none" : ""
-      }`}
+      className="theme-dark relative h-[100svh] overflow-hidden bg-background text-foreground select-none"
       style={{ "--hero-accent": film.accent } as CSSProperties}
     >
       <AnimatePresence initial={false}>
-        <motion.div
+        <HeroSlideArtwork
           key={film.slug}
-          className="absolute inset-x-0 -top-[15%] h-[130%]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.2 }}
-          style={{ y: parallaxY }}
-        >
-          <img
-            src={film.poster}
-            alt={film.title}
-            fetchPriority="high"
-            decoding="async"
-            className={`absolute inset-0 h-full w-full object-cover ${index % 2 === 0 ? "hero-drift" : "hero-drift-alt"}`}
-          />
-        </motion.div>
+          film={film}
+          isDriftAlt={index % 2 !== 0}
+          parallaxY={parallaxY}
+        />
       </AnimatePresence>
-      <div className="absolute inset-0 scrim-b" />
-      <div className="absolute inset-0 bg-gradient-to-r from-scrim/85 via-scrim/40 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 scrim-b" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-scrim/85 via-scrim/40 to-transparent" />
 
       <div className="relative z-10 flex h-full items-center px-5 md:px-10">
         <AnimatePresence mode="wait">
@@ -174,11 +153,11 @@ function HeroCarousel() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="font-sans text-xs font-bold uppercase tracking-tight text-[color:var(--hero-accent)] transition-colors duration-700"
+              className="font-sans text-xs font-bold uppercase tracking-tight text-[color:var(--hero-accent)] transition-colors duration-700 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
             >
               {film.status === "now" ? "Now in theaters" : "Coming soon"} — {film.laurels[0]}
             </motion.p>
-            <h1 className="mt-4 flex flex-wrap items-end gap-x-[0.18em] gap-y-[0.04em] pb-8 font-display text-[clamp(3rem,11vw,10rem)] uppercase leading-[0.82] text-[color:var(--hero-accent)] transition-colors duration-700">
+            <h1 className="mt-4 flex flex-wrap items-end gap-x-[0.18em] gap-y-[0.04em] pb-8 font-display text-[clamp(3rem,11vw,10rem)] uppercase leading-[0.82] text-[color:var(--hero-accent)] transition-colors duration-700 drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
               {film.title.split(" ").map((w, i) => (
                 <span key={w} className="inline-block overflow-hidden">
                   <motion.span
@@ -258,53 +237,6 @@ function HeroCarousel() {
         />
       </div>
 
-      {/* NEON-style interactive cursor follower: follows pointer inside hero hover area */}
-      <motion.div
-        className="pointer-events-none absolute z-30 hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center text-[var(--hero-accent)] md:flex"
-        style={{
-          x: smoothX,
-          y: smoothY,
-          top: 0,
-          left: 0,
-        }}
-        animate={{
-          opacity: isHovering && !isOverInteractive && !trailer ? 1 : 0,
-          scale: isHovering && !isOverInteractive && !trailer ? 1 : 0.4,
-          scaleX: cursorDirection === "right" ? 1 : -1,
-        }}
-        transition={{
-          opacity: { duration: 0.15, ease: "easeOut" },
-          scale: { duration: 0.2, ease: "easeOut" },
-          scaleX: { duration: 0.22, ease: "easeInOut" },
-        }}
-      >
-        <svg
-          viewBox="0 0 100 32"
-          fill="none"
-          className="h-10 w-32 md:h-12 md:w-44 drop-shadow-[0_0_16px_var(--hero-accent)] transition-colors duration-500"
-          aria-hidden
-        >
-          {/* Horizontal shaft */}
-          <line
-            x1="4"
-            y1="16"
-            x2="94"
-            y2="16"
-            stroke="currentColor"
-            strokeWidth={1.75}
-            strokeLinecap="round"
-          />
-          {/* Symmetrical sharp arrowhead wings matching NEON */}
-          <path
-            d="M74 2 L94 16 L74 30"
-            stroke="currentColor"
-            strokeWidth={1.75}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </motion.div>
-
       <TrailerModal film={film} open={trailer} onClose={() => setTrailer(false)} />
     </section>
   );
@@ -379,13 +311,11 @@ function WatchNow() {
               key={f.slug}
               className="group w-[264px] shrink-0 snap-start sm:w-[300px] md:w-[340px]"
             >
-              <div className="relative aspect-video overflow-hidden rounded-2xl bg-card">
-                <img
-                  src={f.poster}
+              <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                <SmartRailImage
+                  src={f.still || f.banner || f.poster}
                   alt={`${f.title} still`}
                   loading={i < 4 ? "eager" : "lazy"}
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1.2s] ease-out group-hover:scale-105"
                 />
                 <div className="pointer-events-none absolute inset-0 scrim-b opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 {f.status === "upcoming" && (
@@ -550,13 +480,11 @@ function AwardWinners() {
               key={`${f.slug}-${award.id ?? index}`}
               className="group w-[75vw] shrink-0 snap-start sm:w-[320px] md:w-[350px] lg:w-[380px]"
             >
-              <div className="relative aspect-video overflow-hidden rounded-2xl bg-card">
-                <img
-                  src={f.poster}
+              <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                <SmartRailImage
+                  src={f.still || f.banner || f.poster}
                   alt={`${f.title} still`}
                   loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1.2s] ease-out group-hover:scale-105"
                 />
                 <div className="pointer-events-none absolute inset-0 scrim-b opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 <Link
@@ -688,7 +616,7 @@ export function HomePage() {
           <p className="mb-8 font-sans text-xs font-bold uppercase tracking-tight text-accent">
             Coming soon
           </p>
-          <div className="grid gap-10 md:grid-cols-2">
+          <div className="grid items-center gap-10 md:grid-cols-2">
             <div>
               {films
                 .filter((f) => f.status === "upcoming")
@@ -710,21 +638,28 @@ export function HomePage() {
                   </Link>
                 ))}
             </div>
-            <div className="relative hidden aspect-[4/3] overflow-hidden rounded-2xl bg-card md:block">
+            <div className="group relative hidden aspect-[2/3] w-full max-w-[380px] justify-self-center overflow-hidden rounded-2xl bg-neutral-950 shadow-2xl md:flex items-center justify-center lg:max-w-[400px]">
               {films
                 .filter((f) => f.status === "upcoming")
-                .map((f, i) => (
-                  <motion.img
-                    key={f.slug}
-                    src={f.poster}
-                    alt={f.title}
-                    loading="lazy"
-                    decoding="async"
-                    animate={{ opacity: active === i ? 1 : 0, scale: active === i ? 1 : 1.15 }}
-                    transition={{ duration: 0.8 }}
-                    className="absolute inset-0 h-full w-full object-contain"
-                  />
-                ))}
+                .map((f, i) => {
+                  const previewSrc = f.comingSoonBanner || f.poster || f.still || f.banner || "";
+                  return (
+                    <motion.div
+                      key={f.slug}
+                      animate={{ opacity: active === i ? 1 : 0 }}
+                      transition={{ duration: 0.6 }}
+                      className="absolute inset-0 h-full w-full overflow-hidden flex items-center justify-center"
+                    >
+                      <SmartRailImage
+                        src={previewSrc}
+                        alt={f.title}
+                        loading="lazy"
+                        orientation="portrait"
+                        className={active === i ? "scale-100" : "scale-105"}
+                      />
+                    </motion.div>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -773,12 +708,11 @@ export function HomePage() {
           {news.slice(0, 3).map((n, i) => (
             <Reveal key={n.id} delay={i * 0.1}>
               <Link to={`/news/${n.id}`} className="group block">
-                <div className="aspect-video overflow-hidden rounded-2xl">
-                  <img
+                <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                  <SmartRailImage
                     src={n.image}
                     alt=""
                     loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
                 <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">

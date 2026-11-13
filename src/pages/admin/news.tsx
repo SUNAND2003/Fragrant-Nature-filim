@@ -235,7 +235,7 @@ export function NewsSection() {
 
           <Field
             label="Article Image"
-            hint="Recommended size: 1600 × 900 px (16:9 widescreen aspect ratio). Optimal formats: JPG, PNG, WebP."
+            hint="Recommended size: 1600 × 900 px (16:9 widescreen). Leave empty to automatically use the linked film's Slot 2 Carousel Banner."
           >
             <ImagePicker
               kind="news"
@@ -246,10 +246,21 @@ export function NewsSection() {
             />
           </Field>
 
-          <Field label="Linked film" htmlFor="news-film" hint="Optional — shown as a related link.">
+          <Field
+            label="Linked film"
+            htmlFor="news-film"
+            hint="Links article to a film and connects to its Slot 2 Carousel Banner automatically."
+          >
             <SelectInput
               value={form.filmSlug}
-              onValueChange={(value) => setForm({ ...form, filmSlug: value })}
+              onValueChange={(value) => {
+                const targetFilm = films.find((f) => f.slug === value);
+                setForm({
+                  ...form,
+                  filmSlug: value,
+                  image: form.image || targetFilm?.banner || targetFilm?.still || "",
+                });
+              }}
               options={filmOptions}
               placeholder="None"
             />

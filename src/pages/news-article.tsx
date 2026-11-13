@@ -90,9 +90,10 @@ export function NewsArticlePage() {
           className="relative mt-12 aspect-[16/9] w-full overflow-hidden rounded-3xl border border-border bg-neutral-950 flex items-center justify-center shadow-2xl sm:aspect-[21/9]"
         >
           <SmartRailImage
-            src={article.image}
+            src={connectedFilm?.banner || connectedFilm?.still || article.image}
             alt={article.title}
             loading="eager"
+            fit="fill"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         </motion.div>
@@ -187,27 +188,32 @@ export function NewsArticlePage() {
           More <span className="text-outline">Dispatches</span>
         </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {moreArticles.map((n, i) => (
-            <Reveal key={n.id} delay={i * 0.1}>
-              <Link to={`/news/${n.id}`} className="group block h-full">
-                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
-                  <SmartRailImage
-                    src={n.image}
-                    alt={n.title}
-                    loading="lazy"
-                    className="transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <p className="mt-4 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
-                  {n.tag} — {n.date}
-                </p>
-                <h3 className="mt-2 text-xl font-bold uppercase tracking-tight group-hover:text-neon-ink transition-colors md:text-2xl">
-                  {n.title}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{n.excerpt}</p>
-              </Link>
-            </Reveal>
-          ))}
+          {moreArticles.map((n, i) => {
+            const film = n.filmSlug ? films.find((f) => f.slug === n.filmSlug) : null;
+            const img = film?.banner || film?.still || n.image;
+            return (
+              <Reveal key={n.id} delay={i * 0.1}>
+                <Link to={`/news/${n.id}`} className="group block h-full">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                    <SmartRailImage
+                      src={img}
+                      alt={n.title}
+                      loading="lazy"
+                      fit="fill"
+                      className="transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </div>
+                  <p className="mt-4 font-sans text-xs font-bold uppercase tracking-tight text-neon-ink">
+                    {n.tag} — {n.date}
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold uppercase tracking-tight group-hover:text-neon-ink transition-colors md:text-2xl">
+                    {n.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{n.excerpt}</p>
+                </Link>
+              </Reveal>
+            );
+          })}
         </div>
       </section>
     </div>

@@ -508,45 +508,45 @@ export function FilmsSection() {
           <div className="space-y-4 border border-border/80 bg-background/40 p-4">
             <div className="border-b border-border pb-2.5">
               <p className="font-display text-sm uppercase tracking-wider text-foreground">
-                Artwork by Display Area
+                Artwork by Display Section
               </p>
               <p className="mt-0.5 font-sans text-[11px] text-muted-foreground">
-                Upload area-specific artwork to avoid cropping issues. Banner &amp; still slots fall back to the poster if left empty.
+                Each slot feeds a specific section of the website. Slots 1, 2, and 3 fall back to Slot 4 (Theatrical Poster) if left empty.
               </p>
             </div>
 
             <Field
-              label="1. Theatrical Poster (Portrait Card & Catalog)"
-              hint="Used in: Films catalog (/films), Now Showing grid, Award Winners, and Movie Cards."
+              label="1. [HERO CAROUSEL & DISPATCH] Full-Bleed Banner (16:9 Widescreen)"
+              hint="Used in: Home Page Top Hero Carousel, Home Page Dispatch (News) cards, and Film Page top backdrop."
             >
               <ImagePicker
-                value={form.poster}
-                onChange={(poster) => setForm({ ...form, poster })}
-                kind="poster"
-                label="Theatrical Poster"
-                recommendedSize="1000 × 1500 px (2:3 portrait)"
+                value={form.banner}
+                onChange={(banner) => setForm({ ...form, banner })}
+                kind="banner"
+                label="Hero Banner"
+                recommendedSize="1920 × 1080 px (16:9) or 2048 × 930 px (21:9)"
               />
             </Field>
 
             <div className="border-t border-border/60 pt-4">
               <Field
-                label="2. Hero Banner / Backdrop (Full-screen Carousel)"
-                hint="Used in: Home Page Hero Carousel & Film Page top backdrop. Wide landscape prevents vertical cropping."
+                label="2. [COMING SOON STAGE] Showcase Poster (2:3 Portrait)"
+                hint="Used in: Home Page dark 'Coming soon' showcase stage. Uploading a poster here promotes this film directly to the top 3 Coming Soon lineup."
               >
                 <ImagePicker
-                  value={form.banner}
-                  onChange={(banner) => setForm({ ...form, banner })}
-                  kind="banner"
-                  label="Hero Banner"
-                  recommendedSize="1920 × 1080 px (16:9) or 2048 × 930 px (21:9)"
+                  value={form.comingSoonBanner}
+                  onChange={(comingSoonBanner) => setForm({ ...form, comingSoonBanner })}
+                  kind="coming-soon"
+                  label="Coming Soon Poster"
+                  recommendedSize="1000 × 1500 px (2:3 poster)"
                 />
               </Field>
             </div>
 
             <div className="border-t border-border/60 pt-4">
               <Field
-                label="3. Video Still / Rail Thumbnail (Watch Now)"
-                hint="Used in: Home Page 'Watch Now' horizontal preview rail and trailer previews."
+                label="3. [NOW SHOWING, WATCH NOW & AWARD WINNERS] Landscape Card (16:9 Widescreen)"
+                hint="Used in: Home Page 'Now Showing' grid, 'Watch Now' rail, 'Award Winners' rail, and Video Player previews."
               >
                 <ImagePicker
                   value={form.still}
@@ -557,17 +557,18 @@ export function FilmsSection() {
                 />
               </Field>
             </div>
+
             <div className="border-t border-border/60 pt-4">
               <Field
-                label="4. Coming Soon Section Poster (2:3 Normal Poster)"
-                hint="Used ONLY in: Home Page dark 'Coming soon' showcase stage (when Status is Upcoming). Leave empty to fall back to the film's poster."
+                label="4. [CATALOG & MOVIE CARDS] Theatrical Poster (2:3 Portrait)"
+                hint="Used in: The Film Catalog (/films) and all vertical movie cards across the site. Standard 2:3 portrait format."
               >
                 <ImagePicker
-                  value={form.comingSoonBanner}
-                  onChange={(comingSoonBanner) => setForm({ ...form, comingSoonBanner })}
-                  kind="coming-soon"
-                  label="Coming Soon Poster"
-                  recommendedSize="1000 × 1500 px (2:3 poster)"
+                  value={form.poster}
+                  onChange={(poster) => setForm({ ...form, poster })}
+                  kind="poster"
+                  label="Theatrical Poster"
+                  recommendedSize="1000 × 1500 px (2:3 portrait)"
                 />
               </Field>
             </div>

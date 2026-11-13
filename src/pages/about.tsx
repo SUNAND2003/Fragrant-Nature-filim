@@ -92,25 +92,30 @@ export function AboutPage() {
           </Link>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {news.slice(0, 3).map((n, i) => (
-            <Reveal key={n.id} delay={i * 0.08}>
-              <Link to={`/news/${n.id}`} className="group block">
-                <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
-                  <SmartRailImage
-                    src={n.image}
-                    alt=""
-                    loading="lazy"
-                    className="transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-                <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">
-                  {n.tag} — {n.date}
-                </p>
-                <h3 className="mt-2 text-2xl font-bold group-hover:underline">{n.title}</h3>
-                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{n.excerpt}</p>
-              </Link>
-            </Reveal>
-          ))}
+          {news.slice(0, 3).map((n, i) => {
+            const linkedFilm = n.filmSlug ? films.find((f) => f.slug === n.filmSlug) : undefined;
+            const dispatchImage = linkedFilm?.banner || linkedFilm?.still || n.image;
+            return (
+              <Reveal key={n.id} delay={i * 0.08}>
+                <Link to={`/news/${n.id}`} className="group block">
+                  <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                    <SmartRailImage
+                      src={dispatchImage}
+                      alt={n.title}
+                      loading="lazy"
+                      fit="fill"
+                      className="transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </div>
+                  <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">
+                    {n.tag} — {n.date}
+                  </p>
+                  <h3 className="mt-2 text-2xl font-bold group-hover:underline">{n.title}</h3>
+                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{n.excerpt}</p>
+                </Link>
+              </Reveal>
+            );
+          })}
         </div>
       </section>
     </>

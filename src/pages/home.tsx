@@ -574,6 +574,7 @@ export function HomePage() {
   });
 
   const { films, news } = useContent();
+  const getFilm = useFilmLookup();
   const [f1, f2, f3] = films.filter((f) => f.status === "now");
   const [active, setActive] = useState(0);
 
@@ -718,23 +719,29 @@ export function HomePage() {
           </Link>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {news.slice(0, 3).map((n, i) => (
-            <Reveal key={n.id} delay={i * 0.1}>
-              <Link to={`/news/${n.id}`} className="group block">
-                <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
-                  <SmartRailImage
-                    src={n.image}
-                    alt=""
-                    loading="lazy"
-                  />
-                </div>
-                <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">
-                  {n.tag} — {n.date}
-                </p>
-                <h3 className="mt-2 text-2xl font-bold group-hover:underline">{n.title}</h3>
-              </Link>
-            </Reveal>
-          ))}
+          {news.slice(0, 3).map((n, i) => {
+            const linkedFilm = n.filmSlug ? getFilm(n.filmSlug) : undefined;
+            // Link Dispatch to the film's Hero Carousel Banner (Slot 2) or Still (Slot 3) so 16:9 cards are widescreen
+            const dispatchImage = linkedFilm?.banner || linkedFilm?.still || n.image;
+            return (
+              <Reveal key={n.id} delay={i * 0.1}>
+                <Link to={`/news/${n.id}`} className="group block">
+                  <div className="relative aspect-video overflow-hidden rounded-2xl bg-neutral-950 flex items-center justify-center">
+                    <SmartRailImage
+                      src={dispatchImage}
+                      alt={n.title}
+                      loading="lazy"
+                      fit="fill"
+                    />
+                  </div>
+                  <p className="mt-4 font-sans text-[11px] font-bold uppercase tracking-tight text-neon-ink">
+                    {n.tag} — {n.date}
+                  </p>
+                  <h3 className="mt-2 text-2xl font-bold group-hover:underline">{n.title}</h3>
+                </Link>
+              </Reveal>
+            );
+          })}
         </div>
       </section>
     </>

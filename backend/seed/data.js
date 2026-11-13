@@ -211,7 +211,7 @@ export const news = [
     title: "Golam: Inside the locked-room phenomenon",
     excerpt:
       "Samjad's pulse-pounding investigative thriller starring Ranjith Sajeev, Dileesh Pothan, and Sunny Wayne opens worldwide.",
-    image: "/images/films/golam.jpg",
+    image: "/images/films/golam-banner.jpg",
     author: "Studio Editorial",
     readTime: "4 min read",
     filmSlug: "golam",

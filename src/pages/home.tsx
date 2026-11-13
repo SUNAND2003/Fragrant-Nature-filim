@@ -5,7 +5,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import type { Award, Film } from "@/lib/films";
 import laurelImg from "@/assets/laurel.png";
@@ -18,40 +18,41 @@ const SLIDE_DURATION = 7000;
 
 function HeroSlideArtwork({
   film,
-  isDriftAlt,
-  parallaxY,
 }: {
   film: Film;
-  isDriftAlt: boolean;
-  parallaxY: any;
+  isDriftAlt?: boolean;
+  parallaxY?: any;
 }) {
   const imageSrc = film.banner || film.poster;
+  const { isPortrait } = useImageRatio(imageSrc);
+
   return (
     <motion.div
       key={film.slug}
-      className="absolute inset-0 h-full w-full overflow-hidden"
+      className="absolute inset-0 h-full w-full overflow-hidden bg-neutral-950"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1.2 }}
-      style={{ y: parallaxY }}
+      transition={{ duration: 0.8 }}
     >
-      {/* Ambient background glow to eliminate awkward empty bars */}
+      {/* Ambient background glow for seamless depth */}
       <img
         src={imageSrc}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover object-center scale-110 blur-3xl opacity-35 brightness-50 select-none pointer-events-none"
+        className="absolute inset-0 h-full w-full object-cover object-center scale-110 blur-3xl opacity-35 select-none pointer-events-none"
       />
 
-      {/* Main hero image: uniform full container height model for all uploaded images */}
+      {/* Main hero image: fills edge-to-edge with stretched height to eliminate top & bottom gaps */}
       <img
         src={imageSrc}
         alt={film.title}
         fetchPriority="high"
         decoding="async"
-        className={`absolute inset-0 h-full w-full object-cover object-center select-none ${
-          isDriftAlt ? "hero-drift-alt" : "hero-drift"
+        className={`absolute inset-0 h-full w-full select-none ${
+          isPortrait
+            ? "object-contain object-center md:object-right md:pr-16 lg:pr-28"
+            : "object-fill"
         }`}
       />
     </motion.div>
@@ -137,8 +138,8 @@ function HeroCarousel() {
           parallaxY={parallaxY}
         />
       </AnimatePresence>
-      <div className="pointer-events-none absolute inset-0 scrim-b" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-scrim/85 via-scrim/40 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 scrim-b opacity-50" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-scrim/60 via-scrim/25 to-transparent" />
 
       <div className="relative z-10 flex h-full items-center px-5 md:px-10">
         <AnimatePresence mode="wait">
@@ -211,8 +212,8 @@ function HeroCarousel() {
         </AnimatePresence>
       </div>
 
-      <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center px-5 md:bottom-10">
-        <div className="flex items-center gap-2.5">
+      <div className="absolute inset-x-0 bottom-6 z-20 flex items-center justify-center px-5 pointer-events-none md:bottom-8">
+        <div className="pointer-events-auto flex items-center gap-2.5 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-lg">
           {slides.map((f, i) => (
             <button
               key={f.slug}
@@ -316,6 +317,7 @@ function WatchNow() {
                   src={f.still || f.banner || f.poster}
                   alt={`${f.title} still`}
                   loading={i < 4 ? "eager" : "lazy"}
+                  fit="fill"
                 />
                 <div className="pointer-events-none absolute inset-0 scrim-b opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 {f.status === "upcoming" && (
@@ -485,6 +487,7 @@ function AwardWinners() {
                   src={f.still || f.banner || f.poster}
                   alt={`${f.title} still`}
                   loading="lazy"
+                  fit="fill"
                 />
                 <div className="pointer-events-none absolute inset-0 scrim-b opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" />
                 <Link
@@ -574,6 +577,20 @@ export function HomePage() {
   const [f1, f2, f3] = films.filter((f) => f.status === "now");
   const [active, setActive] = useState(0);
 
+  // Top 3 Coming Soon films: any film with a 4th slot poster (comingSoonBanner)
+  // or marked upcoming comes to the top; older ones beyond 3 drop off.
+  const comingSoonFilms = useMemo(() => {
+    const list = films.filter((f) => Boolean(f.comingSoonBanner) || f.status === "upcoming");
+    return list
+      .sort((a, b) => {
+        if (Boolean(a.comingSoonBanner) !== Boolean(b.comingSoonBanner)) {
+          return a.comingSoonBanner ? -1 : 1;
+        }
+        return 0;
+      })
+      .slice(0, 3);
+  }, [films]);
+
   return (
     <>
       <HeroCarousel />
@@ -618,48 +635,44 @@ export function HomePage() {
           </p>
           <div className="grid items-center gap-10 md:grid-cols-2">
             <div>
-              {films
-                .filter((f) => f.status === "upcoming")
-                .map((f, i) => (
-                  <Link
-                    key={f.slug}
-                    to={`/films/${f.slug}`}
-                    onMouseEnter={() => setActive(i)}
-                    className="group flex items-baseline justify-between border-b border-border py-6"
+              {comingSoonFilms.map((f, i) => (
+                <Link
+                  key={f.slug}
+                  to={`/films/${f.slug}`}
+                  onMouseEnter={() => setActive(i)}
+                  className="group flex items-baseline justify-between border-b border-border py-6"
+                >
+                  <span
+                    className={`font-display text-4xl transition-all duration-500 md:text-6xl ${active === i ? "translate-x-4 text-neon-ink" : "text-outline"}`}
                   >
-                    <span
-                      className={`font-display text-4xl transition-all duration-500 md:text-6xl ${active === i ? "translate-x-4 text-neon-ink" : "text-outline"}`}
-                    >
-                      {f.title}
-                    </span>
-                    <span className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
-                      {f.release}
-                    </span>
-                  </Link>
-                ))}
+                    {f.title}
+                  </span>
+                  <span className="font-sans text-xs font-bold uppercase tracking-tight text-muted-foreground">
+                    {f.release}
+                  </span>
+                </Link>
+              ))}
             </div>
             <div className="group relative hidden aspect-[2/3] w-full max-w-[380px] justify-self-center overflow-hidden rounded-2xl bg-neutral-950 shadow-2xl md:flex items-center justify-center lg:max-w-[400px]">
-              {films
-                .filter((f) => f.status === "upcoming")
-                .map((f, i) => {
-                  const previewSrc = f.comingSoonBanner || f.poster || f.still || f.banner || "";
-                  return (
-                    <motion.div
-                      key={f.slug}
-                      animate={{ opacity: active === i ? 1 : 0 }}
-                      transition={{ duration: 0.6 }}
-                      className="absolute inset-0 h-full w-full overflow-hidden flex items-center justify-center"
-                    >
-                      <SmartRailImage
-                        src={previewSrc}
-                        alt={f.title}
-                        loading="lazy"
-                        orientation="portrait"
-                        className={active === i ? "scale-100" : "scale-105"}
-                      />
-                    </motion.div>
-                  );
-                })}
+              {comingSoonFilms.map((f, i) => {
+                const previewSrc = f.comingSoonBanner || f.poster || f.still || f.banner || "";
+                return (
+                  <motion.div
+                    key={f.slug}
+                    animate={{ opacity: active === i ? 1 : 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="absolute inset-0 h-full w-full overflow-hidden flex items-center justify-center"
+                  >
+                    <SmartRailImage
+                      src={previewSrc}
+                      alt={f.title}
+                      loading={i === 0 ? "eager" : "lazy"}
+                      orientation="portrait"
+                      className={active === i ? "scale-100" : "scale-105"}
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>

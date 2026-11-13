@@ -9,24 +9,31 @@ import { FilmCard, PlayButton, Reveal, ScreenRequestButton, TrailerModal, useIma
 
 function FilmHeroArtwork({ film }: { film: Film }) {
   const imageSrc = film.banner || film.poster;
+  const { isPortrait } = useImageRatio(imageSrc);
+
   return (
     <>
       <img
         src={imageSrc}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover object-center scale-110 blur-3xl opacity-35 brightness-50 select-none pointer-events-none"
+        className="absolute inset-0 h-full w-full object-cover object-center scale-110 blur-3xl opacity-35 select-none pointer-events-none"
       />
+      {/* Main hero image: fills edge-to-edge with stretched height to eliminate top & bottom gaps */}
       <motion.img
         key={film.slug}
         src={imageSrc}
         alt={film.title}
         fetchPriority="high"
         decoding="async"
-        initial={{ scale: 1.15, filter: "blur(20px)" }}
-        animate={{ scale: 1.02, filter: "blur(0px)" }}
-        transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        initial={{ scale: 1.05, filter: "blur(10px)" }}
+        animate={{ scale: 1.0, filter: "blur(0px)" }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        className={`absolute inset-0 h-full w-full z-[1] select-none ${
+          isPortrait
+            ? "object-contain object-center md:object-right md:pr-16 lg:pr-28"
+            : "object-fill"
+        }`}
       />
     </>
   );
@@ -52,6 +59,10 @@ export function FilmPage() {
   const films = useFilms();
   const [open, setOpen] = useState(false);
 
+  const heroImageSrc = film?.banner || film?.poster;
+  const { ratio: heroRatio, isPortrait: heroIsPortrait } = useImageRatio(heroImageSrc);
+  const isWideBanner = Boolean(film?.banner && heroRatio && heroRatio > 1.8 && !heroIsPortrait);
+
   usePageMeta(
     film
       ? { title: `${film.title} — Fragrant Nature`, description: film.synopsis }
@@ -63,10 +74,10 @@ export function FilmPage() {
   const more = films.filter((f) => f.slug !== film.slug).slice(0, 3);
   return (
     <>
-      <section className="theme-dark relative h-[100svh] overflow-hidden bg-background text-foreground">
+      <section className="theme-dark relative h-[100svh] w-full overflow-hidden bg-background text-foreground">
         <FilmHeroArtwork film={film} />
-        <div className="pointer-events-none absolute inset-0 scrim-b" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-scrim/80 via-scrim/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 scrim-b opacity-50" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-scrim/60 via-scrim/25 to-transparent" />
         <div className="relative flex h-full flex-col justify-end px-5 pb-14 md:px-10">
           <p className="font-sans text-xs font-bold uppercase tracking-tight text-neon-ink drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
             {film.genre} · {film.year} · {film.runtime} · {film.rating}

@@ -48,6 +48,9 @@ export const films = [
     runtime: "2h 05m",
     rating: "U/A",
     poster: "/images/films/golam.jpg",
+    banner: "/images/films/golam-banner.jpg",
+    still: "/images/films/golam-banner.jpg",
+    comingSoonBanner: "/uploads/1794393427324-b241267e.jpg",
     tagline: "Behind closed doors, the truth lies in the details.",
     synopsis:
       "When a successful corporate executive dies under mysterious circumstances in an office washroom, an astute young police officer must navigate corporate secrecy, shifting alibis, and high-tech forensics to uncover the elusive truth.",

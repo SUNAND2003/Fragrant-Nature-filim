@@ -3,6 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { v2 as cloudinary } from "cloudinary";
+import sharp from "sharp";
 import { config } from "../config/env.js";
 
 export const uploadsDir = path.resolve(
@@ -125,12 +126,53 @@ export function parseImageMetadata(buf) {
 
 const VIDEO_EXTS = new Set([".mp4", ".webm", ".mov", ".m4v", ".ogv"]);
 
+/**
+ * Automatically optimizes oversized uploads (e.g. 20-40 MB raw camera/print posters)
+ * into high-fidelity web assets (max 1920px, 85% quality) so pages load instantly
+ * with zero blank screens or socket lag.
+ */
+async function autoProcessImage(buffer, kind, filename) {
+  const ext = path.extname(filename || "").toLowerCase();
+  const isVideo = kind === "video" || VIDEO_EXTS.has(ext);
+  if (isVideo) return buffer;
+  try {
+    const meta = await sharp(buffer).metadata();
+    if (!meta.width || !meta.height) return buffer;
+
+    // Preserve already-compact images (< 1920px and < 600KB)
+    if (meta.width <= 1920 && meta.height <= 1920 && buffer.length <= 600 * 1024) {
+      return buffer;
+    }
+
+    let pipeline = sharp(buffer).resize({
+      width: 1920,
+      height: 1920,
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+
+    if (meta.format === "png") {
+      pipeline = pipeline.png({ quality: 85, compressionLevel: 8 });
+    } else if (meta.format === "webp") {
+      pipeline = pipeline.webp({ quality: 85 });
+    } else {
+      pipeline = pipeline.jpeg({ quality: 85, mozjpeg: true });
+    }
+
+    return await pipeline.toBuffer();
+  } catch (err) {
+    console.warn("Image auto-compression skipped, preserving raw buffer:", err.message);
+    return buffer;
+  }
+}
+
 export async function uploadBuffer(
   buffer,
   { folder = "fragrant-nature", kind = "misc", filename } = {},
 ) {
+  const processedBuffer = await autoProcessImage(buffer, kind, filename);
   if (storageMode === "cloudinary") {
-    const result = await uploadStream(buffer, {
+    const result = await uploadStream(processedBuffer, {
       folder: `${folder}/${kind}`,
       resource_type: "auto",
     });
@@ -143,12 +185,12 @@ export async function uploadBuffer(
       resourceType: result.resource_type === "video" ? "video" : "image",
     };
   }
-  const meta = parseImageMetadata(buffer);
+  const meta = parseImageMetadata(processedBuffer);
   const ext = path.extname(filename || "").toLowerCase() || (meta.format ? `.${meta.format}` : ".bin");
   const isVideo = kind === "video" || VIDEO_EXTS.has(ext);
   const name = `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
   await mkdir(uploadsDir, { recursive: true });
-  await writeFile(path.join(uploadsDir, name), buffer);
+  await writeFile(path.join(uploadsDir, name), processedBuffer);
   return {
     url: `/uploads/${name}`,
     publicId: name,

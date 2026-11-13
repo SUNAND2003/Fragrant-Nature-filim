@@ -873,13 +873,16 @@ export function SmartRailImage({
   loading = "lazy",
   className = "",
   orientation = "landscape",
+  fit = "smart",
 }: {
   src: string;
   alt?: string;
   loading?: "eager" | "lazy";
   className?: string;
   orientation?: "landscape" | "portrait";
+  fit?: "cover" | "contain" | "fill" | "smart";
 }) {
+  const [loaded, setLoaded] = useState(false);
   const { ratio, isPortrait } = useImageRatio(src);
   const useContain =
     ratio === null
@@ -887,8 +890,26 @@ export function SmartRailImage({
       : orientation === "landscape"
       ? isPortrait
       : !isPortrait;
+
+  const resolvedFit =
+    fit === "fill"
+      ? useContain
+        ? "object-contain"
+        : "object-fill"
+      : fit === "contain"
+      ? "object-contain"
+      : fit === "cover"
+      ? "object-cover"
+      : useContain
+      ? "object-contain"
+      : "object-cover";
+
   return (
     <>
+      {/* Background skeleton while loading */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-neutral-900/60 animate-pulse pointer-events-none z-[-1]" />
+      )}
       {/* Ambient background glow to eliminate empty harsh letterbox borders */}
       <img
         src={src}
@@ -902,9 +923,8 @@ export function SmartRailImage({
         alt={alt}
         loading={loading}
         decoding="async"
-        className={`relative z-0 h-full w-full max-h-full max-w-full ${
-          useContain ? "object-contain" : "object-cover"
-        } object-center transition-transform duration-[1.2s] ease-out group-hover:scale-105 ${className}`}
+        onLoad={() => setLoaded(true)}
+        className={`relative z-0 h-full w-full max-h-full max-w-full ${resolvedFit} object-center transition-transform duration-[1.2s] ease-out group-hover:scale-105 ${className}`}
       />
     </>
   );
@@ -943,14 +963,14 @@ export function FilmCard({
             aria-hidden="true"
             className="absolute inset-0 h-full w-full object-cover object-center blur-2xl opacity-40 scale-110 pointer-events-none select-none"
           />
-          {/* Crisp foreground image: automatically adapts between cover and contain without distortion */}
+          {/* Crisp foreground image: automatically adapts between fill and contain without distortion */}
           <img
             src={displaySrc}
             alt={film.title}
             loading="lazy"
             decoding="async"
             className={`relative z-0 h-full w-full max-h-full max-w-full ${
-              useContain ? "object-contain" : "object-cover"
+              useContain ? "object-contain" : "object-fill"
             } object-center grayscale-[20%] transition-all duration-[1.2s] ease-out group-hover:scale-105 group-hover:grayscale-0`}
           />
           <div className="absolute inset-0 scrim-b opacity-80 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />

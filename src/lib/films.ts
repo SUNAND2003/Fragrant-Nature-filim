@@ -1,5 +1,6 @@
 import hero from "@/assets/hero.jpg";
 import golam from "@/assets/golam.jpg";
+import golamBanner from "@/assets/golam-banner.jpg";
 import p1 from "@/assets/p1.jpg";
 import p2 from "@/assets/p2.jpg";
 import p3 from "@/assets/p3.jpg";
@@ -98,6 +99,8 @@ export const films: Film[] = [
     runtime: "2h 05m",
     rating: "U/A",
     poster: golam,
+    banner: golamBanner,
+    comingSoonBanner: "/uploads/1794393427324-b241267e.jpg",
     tagline: "Behind closed doors, the truth lies in the details.",
     synopsis:
       "When a successful corporate executive dies under mysterious circumstances in an office washroom, an astute young police officer must navigate corporate secrecy, shifting alibis, and high-tech forensics to uncover the elusive truth.",

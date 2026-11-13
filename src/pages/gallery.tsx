@@ -13,9 +13,9 @@ type ShotFilm = Pick<Film, "title" | "slug" | "genre" | "year"> & { poster?: str
 
 type ShotSet = { film: ShotFilm; frames: Frame[] };
 
-// Set photography for the gallery. Tiles use a cinematic 16:10 landscape ratio
-// matching modern studio catalogs (like Neon), providing balanced height and generous spacing.
-const FRAME_RATIO = "aspect-[16/10]";
+// Set photography and key art for the gallery. Tiles use a 2:3 vertical poster ratio
+// matching standard theatrical movie poster cards (4 cards per row on desktop).
+const FRAME_RATIO = "aspect-[2/3]";
 
 // Stand-in set photos live in public/gallery/ (900×1200) and are served from
 // public, so they stay out of the JS bundle and are lazy-loaded on scroll.
@@ -115,6 +115,7 @@ export function GalleryPage() {
   return (
     <>
       <PageTitle eyebrow={`${sets.length} photo sets`} title="The" outline="Gallery" />
+
       <div className="mx-auto max-w-[1600px] space-y-20 px-5 pb-24 md:space-y-28 md:px-10">
         {sets.map((s, si) => (
           <Reveal key={s.film.slug}>
@@ -141,7 +142,7 @@ export function GalleryPage() {
               </div>
             </div>
 
-            {/* That film's photo set — four tiles per row */}
+            {/* Four 2:3 vertical poster cards per row */}
             <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 md:gap-6 lg:gap-8 lg:gap-y-10">
               {s.frames.map((fr, fi) => (
                 <button
@@ -154,7 +155,8 @@ export function GalleryPage() {
                   <SmartRailImage
                     src={fr.src}
                     alt={`${s.film.title} — photo ${fr.no}`}
-                    loading="lazy"
+                    loading={fi < 4 ? "eager" : "lazy"}
+                    orientation="portrait"
                   />
                   <div className="absolute inset-0 scrim-b opacity-60 transition-opacity duration-500 group-hover:opacity-90 pointer-events-none" />
                   <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-0.5 font-sans text-[10px] font-bold uppercase tracking-tight text-white backdrop-blur">

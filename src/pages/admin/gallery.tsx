@@ -679,7 +679,7 @@ export function GallerySection() {
                 {form.images.map((img, index) => (
                   <div
                     key={index}
-                    className="group relative aspect-[16/10] overflow-hidden rounded-md border border-neutral-300 bg-neutral-950 shadow-2xs"
+                    className="group relative aspect-[2/3] overflow-hidden rounded-md border border-neutral-300 bg-neutral-950 shadow-2xs"
                   >
                     <img
                       src={img.url}
@@ -755,7 +755,7 @@ export function GallerySection() {
               {/* Preview if newImage.url is populated */}
               {newImage.url && (
                 <div className="flex items-center gap-3 rounded border border-neutral-300 bg-neutral-100 p-2">
-                  <div className="relative aspect-[16/10] h-12 overflow-hidden rounded bg-black shrink-0">
+                  <div className="relative aspect-[2/3] h-14 overflow-hidden rounded bg-black shrink-0">
                     <img src={newImage.url} alt="Preview" className="h-full w-full object-cover object-center" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1067,13 +1067,13 @@ export function GallerySection() {
                     </div>
                   )}
 
-                  {/* Gallery Photo Tiles Preview (16:10 aspect ratio matching the public gallery) */}
+                  {/* Gallery Photo Tiles Preview (2:3 aspect ratio matching the public gallery) */}
                   {photoCount > 0 ? (
                     <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                       {item.images?.map((img, imgIdx) => (
                         <div
                           key={imgIdx}
-                          className="group relative aspect-[16/10] overflow-hidden rounded-md border border-neutral-300 bg-neutral-900 shadow-2xs"
+                          className="group relative aspect-[2/3] overflow-hidden rounded-md border border-neutral-300 bg-neutral-900 shadow-2xs"
                         >
                           <img
                             src={img.url}
